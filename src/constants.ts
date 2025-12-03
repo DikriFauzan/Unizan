@@ -1,13 +1,19 @@
-import { TermuxNode, NeoAgentStatus } from './types';
+import { TermuxNode, NeoAgentStatus, GameEndpoint } from './types';
 
-export const APP_VERSION = "5.0.0-Ultimate-Sovereign";
+export const APP_VERSION = "5.1.0-Revenue-Core";
 export const USER_PHONE = "085119887826";
 
 export const DEFAULT_PATHS = {
     TERMUX_ROOT: "/sdcard/Documents/FeacWAMini/FEAC_VAULT",
     GITHUB_REPO: "DikriFauzan/Unizan", 
-  
+    NEO_PORT: "8090"
 };
+
+export const DEFAULT_GAME_PORTS: GameEndpoint[] = [
+    { id: 'p1', name: 'NeoEngine Control', port: '8090', type: 'control', status: 'active' },
+    { id: 'p2', name: 'Game Telemetry (Live)', port: '8091', type: 'telemetry', status: 'active' },
+    { id: 'p3', name: 'IAP Verification', port: '8092', type: 'iap_verification', status: 'active' }
+];
 
 export const INITIAL_ROOMS = [
   { id: 'admin-ai', name: 'FEAC BRAIN (ULTIMATE)', type: 'ai', unreadCount: 0, status: 'online', icon: 'brain' },

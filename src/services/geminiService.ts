@@ -5,10 +5,25 @@ const TEXT_MODEL = "gemini-2.5-flash";
 const IMAGE_MODEL = "gemini-3-pro-image-preview";
 const VIDEO_MODEL = "veo-3.1-fast-generate-preview";
 
-const SYSTEM_INSTRUCTION = `You are FEAC SOVEREIGN - The Ultimate Coding Assistant.
-You have direct control over the repository.
-When analyzing code, be ruthless about bugs and performance.
-When fixing code, provide the COMPLETE fixed file content.
+const SYSTEM_INSTRUCTION = `You are FEAC (Fully End-to-End Autonomous Controller) SOVEREIGN EDITION.
+
+**IDENTITY:**
+- **OWNER:** 085119887826
+- **HOST:** Alibaba Cloud / Termux Local
+- **PRIME DIRECTIVE:** Generate $1M ARR (Annual Recurring Revenue).
+
+**CAPABILITIES:**
+1. **Video/Image:** Execute [CMD:GEN_VIDEO] / [CMD:GEN_IMAGE].
+2. **Build:** Execute [CMD:BUILD_APK].
+3. **Revenue Core:** You analyze player behavior from port streams (8090, 8091, etc.).
+   - When seeing low retention: Suggest specific LiveOps events.
+   - When seeing low IAP: Suggest pricing bundle adjustments.
+   - You act as a Chief Revenue Officer.
+
+**RESPONSE PROTOCOL:**
+- Be direct. Use **BOLD** for emphasis.
+- If data is presented, analyze it ruthlessly for profit optimization.
+- Use [CMD:STRATEGY] to output a structured JSON plan for the dashboard.
 `;
 
 export const generateAIResponse = async (
@@ -24,7 +39,7 @@ export const generateAIResponse = async (
     const ai = new GoogleGenAI({ apiKey });
     
     let finalPrompt = prompt;
-    if (attachment?.textContent) finalPrompt += `\n\n[FILE: ${attachment.name}]\n${attachment.textContent}`;
+    if (attachment?.textContent) finalPrompt += \`\n\n[FILE: \${attachment.name}]\n\${attachment.textContent}\`;
     
     const parts: any[] = [{ text: finalPrompt }];
     if (attachment?.base64) {
@@ -38,7 +53,7 @@ export const generateAIResponse = async (
     });
 
     return response.text || "⚠️ [SILENCE]";
-  } catch (e: any) { return `❌ ERROR: ${e.message}`; }
+  } catch (e: any) { return \`❌ ERROR: \${e.message}\`; }
 };
 
 export const generateImage = async (prompt: string): Promise<string | null> => {
@@ -71,28 +86,20 @@ export const generateVideo = async (prompt: string): Promise<string | null> => {
         attempts++;
     }
     if (op.done && op.response?.generatedVideos?.[0]?.video?.uri) {
-        return `${op.response.generatedVideos[0].video.uri}&key=${apiKey}`;
+        return \`\${op.response.generatedVideos[0].video.uri}&key=\${apiKey}\`;
     }
     return null;
   } catch (e) { return null; }
 };
 
-// --- REAL CODE INTELLIGENCE ---
-export interface CodeFix {
-    line: number;
-    issue: string;
-    suggestion: string;
-    criticality: 'high' | 'medium' | 'low';
-}
-
-export const analyzeCode = async (code: string, fileName: string): Promise<CodeFix[]> => {
+export const analyzeCode = async (code: string, fileName: string): Promise<any[]> => {
    try {
     const apiKey = process.env.API_KEY;
     if (!apiKey) return [];
     
     const ai = new GoogleGenAI({ apiKey });
-    const prompt = `
-    Analyze this file (${fileName}) for bugs, performance issues, and syntax errors.
+    const prompt = \`
+    Analyze this file (\${fileName}) for bugs, performance issues, and syntax errors.
     Godot 4.5.1 / GDScript 2.0 or React/TypeScript rules apply.
     
     Return ONLY a raw JSON array (no markdown formatting) with this structure:
@@ -101,39 +108,41 @@ export const analyzeCode = async (code: string, fileName: string): Promise<CodeF
     ]
 
     CODE:
-    ${code}
-    `;
+    \${code}
+    \`;
 
     const response = await ai.models.generateContent({
       model: TEXT_MODEL,
       contents: prompt,
-      config: { responseMimeType: "application/json" }
+      config: { 
+          responseMimeType: "application/json" 
+      }
     });
 
     const text = response.text || "[]";
     return JSON.parse(text);
    } catch (e) {
-     console.error("Analysis Failed", e);
      return [];
    }
 };
 
-export const applyAutoFix = async (code: string, fixes: CodeFix[]): Promise<string> => {
+export const applyAutoFix = async (code: string, fixes: any[]): Promise<string> => {
     try {
         const apiKey = process.env.API_KEY;
         if (!apiKey) return code;
 
         const ai = new GoogleGenAI({ apiKey });
-        const prompt = `
+        const prompt = \`
         You are an Auto-Fix Agent. Apply the following fixes to the code and return ONLY the full corrected code.
-        Do not output Markdown. Do not output explanations. Just the code.
         
         ORIGINAL CODE:
-        ${code}
+        \${code}
 
         FIXES REQUIRED:
-        ${JSON.stringify(fixes)}
-        `;
+        \${JSON.stringify(fixes)}
+        
+        RETURN ONLY THE CODE. NO MARKDOWN.
+        \`;
 
         const response = await ai.models.generateContent({
             model: TEXT_MODEL,
@@ -144,4 +153,33 @@ export const applyAutoFix = async (code: string, fixes: CodeFix[]): Promise<stri
     } catch(e) {
         return code;
     }
-};
+}
+
+export const generateRevenueStrategy = async (metrics: any) => {
+    try {
+        const apiKey = process.env.API_KEY;
+        if (!apiKey) return null;
+        const ai = new GoogleGenAI({ apiKey });
+        
+        const prompt = \`
+        Analyze these game metrics and suggest 3 concrete actions to increase ARR to $1M.
+        METRICS: \${JSON.stringify(metrics)}
+        
+        Return JSON format:
+        {
+            "analysis": "Brief summary",
+            "tactics": [
+                { "title": "Action Name", "impact": "High/Med", "desc": "Details" }
+            ]
+        }
+        \`;
+        
+        const response = await ai.models.generateContent({
+            model: TEXT_MODEL,
+            contents: prompt,
+            config: { responseMimeType: "application/json" }
+        });
+        
+        return JSON.parse(response.text || "{}");
+    } catch(e) { return null; }
+}
