@@ -1,0 +1,48 @@
+name: FEAC Sovereign OTA Patch
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'android/**'
+      - 'README.md'
+
+permissions:
+  contents: write
+
+jobs:
+  deploy-neural-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with: { node-version: '18' }
+        
+      - name: Build React Brain
+        run: |
+          npm install
+          npm run build
+          
+      - name: Bundle Godot Scripts (Mock)
+        run: |
+          # In real scenario, we export .pck or zip gdscripts
+          mkdir -p dist/neo_core
+          echo "var version = '$(date +%s)'" > dist/neo_core/version.gd
+          
+      - name: Create Neural Patch (Zip)
+        run: |
+          cd dist
+          zip -r ../feac_neural_patch.zip .
+          cd ..
+          
+      - name: Release OTA Patch
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}-ota
+          name: Neural Core v${{ github.run_number }}
+          files: feac_neural_patch.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

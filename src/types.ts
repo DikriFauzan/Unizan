@@ -108,3 +108,9 @@ export interface LtvDataPoint {
 }
 
 export type GeneratorType = 'ui-layout' | 'shader' | 'apk-signer';
+export interface UpdateState {
+    available: boolean;
+    version: string;
+    downloadUrl?: string;
+    notes?: string;
+}
