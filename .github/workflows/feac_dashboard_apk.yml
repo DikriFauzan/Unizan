@@ -7,6 +7,7 @@ on:
       - 'src/**'
       - 'package.json'
       - 'capacitor.config.json'
+      - '.github/workflows/feac_dashboard_apk.yml'
 
 jobs:
   build-apk:
@@ -24,6 +25,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        
       - name: Install Dependencies
         run: |
           npm install
@@ -32,14 +36,23 @@ jobs:
       - name: Build Web App
         run: npm run build
         
-      - name: Initialize Android
+      - name: Sync Android Platform
         run: |
-          npx cap add android
+          # Cek apakah folder android sudah ada dari repo
+          if [ ! -d "android" ]; then
+            echo "Android platform missing, creating it..."
+            npx cap add android
+          else
+            echo "Android platform detected from repo, skipping add..."
+          fi
+          # Selalu sync untuk update kode terbaru ke native
           npx cap sync android
           
       - name: Build APK (Debug)
         run: |
           cd android
+          # Pastikan gradlew bisa dieksekusi
+          chmod +x gradlew
           ./gradlew assembleDebug
           
       - name: Upload APK
