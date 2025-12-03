@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
-import { Activity, DollarSign, Database, Globe, CheckCircle2, Terminal, ShieldAlert, Cpu, Lock, FileCode, Archive, TrendingUp, Lightbulb, Zap, Target, Loader2, Wifi } from 'lucide-react';
-import { TermuxNode, PendingFix, AppSettings, RevenueDataPoint, LtvDataPoint, BuildStatus } from '../types';
-import { triggerWorkflow } from '../services/githubService';
-import { generateRevenueStrategy } from '../services/geminiService';
+import { Activity, DollarSign, Database, Globe, CheckCircle2, Terminal, ShieldAlert, Cpu, Lock, FileCode, Archive, TrendingUp, Lightbulb, Zap, Target, Loader2, Wifi, AlertTriangle, Wrench, Bug, Download, ShieldCheck, Key, Smartphone, Play, Stethoscope, Check } from 'lucide-react';
+import { TermuxNode, PendingFix, AppSettings, RevenueDataPoint, LtvDataPoint, BuildStatus, BuildDiagnosis } from '../types';
+import { triggerWorkflow, commitFileToGithub } from '../services/githubService';
+import { generateRevenueStrategy, diagnoseBuildFailure } from '../services/geminiService';
 
 interface DashboardProps {
   termuxNodes: TermuxNode[];
@@ -22,6 +22,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     termuxNodes, 
     settings,
     revenueData = [], 
+    ltvData = [],
     triggerBuildMode = 'idle',
     onBuildComplete
 }) => {
@@ -30,7 +31,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [strategy, setStrategy] = useState<any>(null);
   const [isGeneratingStrategy, setIsGeneratingStrategy] = useState(false);
 
-  // Hybrid Build State
+  // Build & Recovery State
   const [buildStatus, setBuildStatus] = useState<BuildStatus>({
       step: 'idle',
       mode: 'private',
@@ -38,6 +39,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
       log: [],
       legacyCoreDetected: true
   });
+  const [diagnosis, setDiagnosis] = useState<BuildDiagnosis | null>(null);
+  const [isDiagnosing, setIsDiagnosing] = useState(false);
 
   useEffect(() => {
       if ((triggerBuildMode === 'private' || triggerBuildMode === 'public') && buildStatus.step === 'idle') {
@@ -47,7 +50,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const handleGenerateStrategy = async () => {
       setIsGeneratingStrategy(true);
-      // Simulate reading from ports by passing current mock data
       const analysis = await generateRevenueStrategy({ 
           dau: 8420, 
           arpu: 1.42, 
@@ -60,6 +62,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const startBuild = async (mode: 'private' | 'public') => {
       const isPublic = mode === 'public';
+      setDiagnosis(null);
       setBuildStatus(prev => ({ ...prev, step: 'cloning', mode: mode, progress: 5, log: [`> Initializing FEAC ${isPublic ? 'PUBLIC' : 'PRIVATE'} Pipeline...`, '> Checking GitHub Connectivity...'] }));
 
       if (settings.githubToken && settings.githubRepo) {
@@ -77,10 +80,33 @@ export const Dashboard: React.FC<DashboardProps> = ({
           }
       } else {
           updateBuild('analysis', 20, '> ⚠️ NO GITHUB TOKEN. RUNNING SIMULATION.');
+          // Simulate a failure for demo purposes if "Test Fail" was clicked elsewhere (not implemented here, purely logic)
           setTimeout(() => {
               updateBuild('complete', 100, '> ✅ Private Artifact Generated (Simulated).');
               if (onBuildComplete) onBuildComplete();
           }, 4000);
+      }
+  };
+
+  const handleDiagnose = async () => {
+      if (buildStatus.log.length === 0) return;
+      setIsDiagnosing(true);
+      // Send logs to Gemini
+      const result = await diagnoseBuildFailure(buildStatus.log);
+      setDiagnosis(result);
+      setIsDiagnosing(false);
+  };
+
+  const handleApplyFix = async () => {
+      if (!diagnosis || !settings.githubToken) return;
+      try {
+          // Strict Permission Gate: User clicked "Authorize Fix"
+          await commitFileToGithub(settings, diagnosis.affectedFile, diagnosis.patchedContent, `FEAC Auto-Recovery: ${diagnosis.cause}`);
+          setDiagnosis(null);
+          setBuildStatus(prev => ({...prev, step: 'idle', progress: 0, log: [...prev.log, `> ✅ FIX APPLIED to ${diagnosis.affectedFile}. Ready to retry.`]}));
+          alert("Fix applied successfully. You can now retry the build.");
+      } catch (e) {
+          alert("Failed to apply fix. Check repository permissions.");
       }
   };
 
@@ -226,26 +252,59 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   </div>
               )}
 
+              {/* LOGS AND DIAGNOSIS */}
               {buildStatus.step !== 'idle' && (
                   <div className="flex flex-col h-[250px]">
-                      <div className="flex-1 bg-black/30 rounded-lg p-3 font-mono text-[10px] text-green-400 overflow-y-auto mb-3 border border-white/5">
-                          {buildStatus.log.map((l, i) => (
-                              <div key={i} className="mb-1.5">{l}</div>
-                          ))}
-                          {buildStatus.step !== 'complete' && <div className="animate-pulse">_</div>}
-                      </div>
+                      {/* BUILD LOGS */}
+                      {!diagnosis ? (
+                          <div className="flex-1 bg-black/30 rounded-lg p-3 font-mono text-[10px] text-green-400 overflow-y-auto mb-3 border border-white/5">
+                              {buildStatus.log.map((l, i) => (
+                                  <div key={i} className={`mb-1.5 ${l.includes('ERROR') ? 'text-red-400 font-bold' : ''}`}>{l}</div>
+                              ))}
+                              {buildStatus.step !== 'complete' && buildStatus.step !== 'error' && <div className="animate-pulse">_</div>}
+                          </div>
+                      ) : (
+                          /* DIAGNOSIS PANEL */
+                          <div className="flex-1 bg-red-900/10 rounded-lg p-3 border border-red-500/20 overflow-y-auto mb-3">
+                              <div className="flex items-center gap-2 text-red-400 font-bold text-xs mb-2">
+                                  <Stethoscope size={14}/> DIAGNOSIS COMPLETE
+                              </div>
+                              <div className="text-xs text-white font-bold mb-1">{diagnosis.cause}</div>
+                              <div className="text-[10px] text-slate-400 mb-3">{diagnosis.fixDescription}</div>
+                              <div className="bg-black/50 p-2 rounded text-[10px] font-mono text-green-300">
+                                  Patching: {diagnosis.affectedFile}
+                              </div>
+                          </div>
+                      )}
                       
-                      <div className="space-y-2">
-                          <div className="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
-                              <span>Progress</span>
-                              <span>{buildStatus.progress}%</span>
+                      {/* CONTROLS */}
+                      {buildStatus.step === 'error' ? (
+                          <div className="mt-3 flex gap-2 animate-fade-in-up">
+                              {diagnosis ? (
+                                  <button 
+                                    onClick={handleApplyFix}
+                                    className="flex-1 bg-green-600 hover:bg-green-500 py-2 rounded text-xs font-bold text-white shadow-lg flex items-center justify-center gap-2"
+                                  >
+                                    <Check size={12}/> AUTHORIZE FIX
+                                  </button>
+                              ) : (
+                                  <button 
+                                    onClick={handleDiagnose}
+                                    disabled={isDiagnosing}
+                                    className="flex-1 bg-yellow-600 hover:bg-yellow-500 py-2 rounded text-xs font-bold text-white shadow-lg flex items-center justify-center gap-2 animate-pulse"
+                                  >
+                                    {isDiagnosing ? <Loader2 size={12} className="animate-spin"/> : <Stethoscope size={12}/>} 
+                                    {isDiagnosing ? 'ANALYZING...' : 'DIAGNOSE & RECOVER'}
+                                  </button>
+                              )}
+                              <button 
+                                onClick={() => setBuildStatus(prev => ({...prev, step: 'idle'}))}
+                                className="px-4 bg-slate-700 hover:bg-slate-600 rounded text-xs font-bold text-white"
+                              >
+                                Abort
+                              </button>
                           </div>
-                          <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                              <div className="h-full bg-green-500 transition-all duration-300" style={{width: `${buildStatus.progress}%`}}></div>
-                          </div>
-                      </div>
-
-                      {buildStatus.step === 'complete' && (
+                      ) : buildStatus.step === 'complete' && (
                           <div className="mt-3 flex gap-2 animate-fade-in-up">
                               <button onClick={() => setBuildStatus(prev => ({...prev, step: 'idle'}))} className="flex-1 bg-white/10 hover:bg-white/20 py-2 rounded text-xs font-bold text-white transition-colors">
                                   Dismiss

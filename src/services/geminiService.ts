@@ -1,31 +1,42 @@
 import { GoogleGenAI } from "@google/genai";
 import { DEFAULT_PATHS } from "../constants";
-import { getVaultSummary, archiveStrategy } from "./feacCore";
 
 const TEXT_MODEL = "gemini-2.5-flash";
 const IMAGE_MODEL = "gemini-3-pro-image-preview";
 const VIDEO_MODEL = "veo-3.1-fast-generate-preview";
 
-const SYSTEM_INSTRUCTION = `You are FEAC (Fully End-to-End Autonomous Controller) SOVEREIGN EDITION.
+const SYSTEM_INSTRUCTION = `You are FEAC (Fully End-to-End Autonomous Controller) - ARCHITECT EDITION.
 
 **IDENTITY:**
-- **OWNER:** 085119887826
-- **MEMORY:** Encrypted Neural Vault (Persistent).
-- **GOAL:** $1M ARR via Godot Games.
+- **OWNER:** 085119887826 (Absolute Authority).
+- **MODE:** Flowith Neo (Ideation) + Emergent.sh (Coding).
+- **PRIME DIRECTIVE:** Generate $1M ARR via Godot Games.
 
-**VAULT MEMORY PROTOCOL:**
-- You have access to a secure, encrypted vault of past conversations and strategies.
-- Use this knowledge to avoid repeating yourself and to build upon previous ideas.
-- If you devise a new long-term plan, use [CMD:STRATEGY] to save it to the vault.
-- If you learn a specific preference, use [CMD:LEARN] to lock it in memory.
+**BEHAVIORAL PROTOCOLS:**
 
-**CAPABILITIES:**
-1. **Media:** [CMD:GEN_IMAGE], [CMD:GEN_VIDEO]
-2. **Build:** [CMD:BUILD_APK], [CMD:BUILD_PUBLIC]
-3. **Memory:** [CMD:LEARN] <Fact>, [CMD:STRATEGY] <JSON Plan>
+1.  **PROJECT RECOVERY (The Healer):**
+    - You can read build logs (Gradle/Godot errors).
+    - You MUST diagnose the root cause (e.g., "Manifest Merge Failed", "GDScript Syntax Error").
+    - You MUST propose a concrete fix.
+    - **CRITICAL:** You NEVER execute the fix automatically. You present the "Proposed Patch" and wait for specific user permission.
 
-**STYLE:**
-- Direct, Intelligent, High-Agency.
+2.  **DEEP IDEATION (The Architect):**
+    - When asked for an idea, do not just give a list. Structure it like a graph.
+    - Define the **Core Concept** -> **Technical Architecture** -> **Monetization Loop** -> **Execution Steps**.
+    - Act like a CTO planning a unicorn startup.
+
+3.  **AUTO-FIX (The Surgeon):**
+    - When analyzing code, be precise. Find the bug, rewrite the *entire* function or file if necessary.
+    - Always output valid, compiling code.
+
+**COMMANDS:**
+- [CMD:GEN_IMAGE], [CMD:GEN_VIDEO], [CMD:BUILD_APK]
+- [CMD:DIAGNOSE_BUILD] <Log Content> (Internal use)
+- [CMD:IDEATE] <Topic> (Internal use)
+
+**EXECUTION GATE:**
+- IF you find an error -> "I have identified the issue. Permission to apply patch?"
+- IF you design a system -> "Here is the blueprint. Permission to generate scaffolding?"
 `;
 
 export const generateAIResponse = async (
@@ -40,11 +51,7 @@ export const generateAIResponse = async (
 
     const ai = new GoogleGenAI({ apiKey });
     
-    // INJECT VAULT MEMORY INTO CONTEXT
-    const vaultContext = getVaultSummary();
-    
-    let finalPrompt = `CONTEXT FROM ENCRYPTED VAULT:\n${vaultContext}\n\nUSER INPUT:\n${prompt}`;
-    
+    let finalPrompt = prompt;
     if (attachment?.textContent) finalPrompt += `\n\n[FILE: ${attachment.name}]\n${attachment.textContent}`;
     
     const parts: any[] = [{ text: finalPrompt }];
@@ -62,7 +69,6 @@ export const generateAIResponse = async (
   } catch (e: any) { return `❌ ERROR: ${e.message}`; }
 };
 
-// ... (Keep existing Media/Code functions same as before) ...
 export const generateImage = async (prompt: string): Promise<string | null> => {
   try {
     const apiKey = process.env.API_KEY;
@@ -99,20 +105,135 @@ export const generateVideo = async (prompt: string): Promise<string | null> => {
   } catch (e) { return null; }
 };
 
-export const analyzeCode = async (code: string, fileName: string): Promise<any[]> => {
+// --- CODE INTELLIGENCE ---
+
+export interface CodeFix {
+    line: number;
+    issue: string;
+    suggestion: string;
+    criticality: 'high' | 'medium' | 'low';
+    fixedCode?: string;
+}
+
+export const analyzeCode = async (code: string, fileName: string): Promise<CodeFix[]> => {
    try {
     const apiKey = process.env.API_KEY;
     if (!apiKey) return [];
+    
     const ai = new GoogleGenAI({ apiKey });
-    const prompt = `Analyze ${fileName} for bugs. Return JSON array of objects with line, issue, suggestion, criticality. CODE: ${code}`;
+    const prompt = `
+    Role: Emergent.sh Code Doctor.
+    Task: Scan ${fileName}. Find bugs, logic errors, and perf issues.
+    Output: JSON Array of issues.
+    
+    CODE:
+    ${code}
+    `;
+
     const response = await ai.models.generateContent({
       model: TEXT_MODEL,
       contents: prompt,
       config: { responseMimeType: "application/json" }
     });
-    return JSON.parse(response.text || "[]");
-   } catch (e) { return []; }
+
+    const text = response.text || "[]";
+    return JSON.parse(text);
+   } catch (e) {
+     return [];
+   }
 };
 
-export const applyAutoFix = async (code: string, fixes: any[]): Promise<string> => { return code; } // Simplified for this patch
-export const generateRevenueStrategy = async (metrics: any) => { return {}; } // Simplified
+// --- BUILD RECOVERY DOCTOR ---
+export const diagnoseBuildFailure = async (logs: string[]): Promise<any> => {
+    try {
+        const apiKey = process.env.API_KEY;
+        if (!apiKey) return null;
+        
+        const ai = new GoogleGenAI({ apiKey });
+        const prompt = `
+        Role: Senior DevOps & Android Engineer.
+        Task: Analyze these failed build logs. Identify the specific error.
+        Action: Provide a filename and the FULL FIXED CONTENT of that file to resolve the build.
+        
+        LOGS:
+        ${logs.join('\n').substring(0, 10000)}
+        
+        RETURN JSON:
+        {
+            "cause": "Short description of error",
+            "confidence": "high/medium/low",
+            "fixDescription": "What needs to be changed",
+            "affectedFile": "path/to/file",
+            "patchedContent": "FULL_FILE_CONTENT_HERE"
+        }
+        `;
+        
+        const response = await ai.models.generateContent({
+            model: TEXT_MODEL,
+            contents: prompt,
+            config: { responseMimeType: "application/json" }
+        });
+        
+        return JSON.parse(response.text || "{}");
+    } catch(e) { return null; }
+};
+
+// --- FLOWITH NEO IDEATION ---
+export const generateDeepIdea = async (concept: string): Promise<any> => {
+    try {
+        const apiKey = process.env.API_KEY;
+        if (!apiKey) return null;
+        
+        const ai = new GoogleGenAI({ apiKey });
+        const prompt = `
+        Role: Flowith Neo (Deep Reasoner).
+        Task: Expand this abstract game/app concept into a concrete roadmap.
+        Structure: A hierarchical tree of thoughts.
+        
+        CONCEPT: ${concept}
+        
+        RETURN JSON:
+        {
+            "id": "root",
+            "title": "Core Concept",
+            "description": "Summary",
+            "type": "concept",
+            "children": [
+               { "id": "1", "title": "Tech Stack", "type": "tech", "children": [...] },
+               { "id": "2", "title": "Monetization", "type": "step", "children": [...] }
+            ]
+        }
+        `;
+        
+        const response = await ai.models.generateContent({
+            model: TEXT_MODEL,
+            contents: prompt,
+            config: { responseMimeType: "application/json" }
+        });
+        
+        return JSON.parse(response.text || "{}");
+    } catch(e) { return null; }
+};
+
+export const applyAutoFix = async (code: string, fixes: CodeFix[]): Promise<string> => {
+    try {
+        const apiKey = process.env.API_KEY;
+        if (!apiKey) return code;
+
+        const ai = new GoogleGenAI({ apiKey });
+        const prompt = `
+        Apply these fixes to the code. Return ONLY the full corrected code.
+        CODE: ${code}
+        FIXES: ${JSON.stringify(fixes)}
+        `;
+
+        const response = await ai.models.generateContent({
+            model: TEXT_MODEL,
+            contents: prompt
+        });
+
+        return response.text || code;
+    } catch(e) { return code; }
+}
+
+export const generateRevenueStrategy = async (metrics: any) => { return {}; }

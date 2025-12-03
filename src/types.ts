@@ -25,7 +25,7 @@ export interface Message {
   senderId: string;
   content: string;
   timestamp: Date;
-  type: 'text' | 'code' | 'alert' | 'build-log' | 'github-fix' | 'web-preview' | 'image' | 'video' | 'strategy-card';
+  type: 'text' | 'code' | 'alert' | 'build-log' | 'github-fix' | 'web-preview' | 'image' | 'video' | 'strategy-card' | 'ideation-graph';
   meta?: any;
   attachment?: {
     name: string;
@@ -54,6 +54,22 @@ export interface BuildStatus {
   log: string[];
   apkUrl?: string;
   legacyCoreDetected?: boolean; 
+}
+
+export interface BuildDiagnosis {
+  cause: string;
+  confidence: 'high' | 'medium' | 'low';
+  fixDescription: string;
+  affectedFile: string;
+  patchedContent: string;
+}
+
+export interface IdeationNode {
+  id: string;
+  title: string;
+  description: string;
+  type: 'concept' | 'tech' | 'step';
+  children?: IdeationNode[];
 }
 
 export interface TermuxNode {
@@ -107,10 +123,11 @@ export interface LtvDataPoint {
     ltv: number;
 }
 
-export type GeneratorType = 'ui-layout' | 'shader' | 'apk-signer';
 export interface UpdateState {
     available: boolean;
     version: string;
     downloadUrl?: string;
     notes?: string;
 }
+
+export type GeneratorType = 'ui-layout' | 'shader' | 'apk-signer';
