@@ -1,0 +1,113 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env*.local
+.env
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Database
+*.db
+*.db-journal
+
+# Logs
+logs/
+*.log
+
+# Build outputs
+dist/
+build/
+apk/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+
+# Cache
+.cache/
+.parcel-cache/
+
+# Generated files
+/src/generated/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Environment secrets
+.env.production
+.env.staging
+secrets/
+
+# Godot
+.import/
+export.cfg
+export_presets.cfg
+
+# Android
+android/build/
+android/.gradle/
+android/local.properties
+
+# Termux
+.termux/
+
+# APK files
+*.apk
+*.aab
+
+# Keystore
+*.jks
+*.keystore
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Node modules
+node_modules/
+npm/
+
+# Yarn
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*

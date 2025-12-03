@@ -1,0 +1,79 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+#chat-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#messages {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: auto;
+    background-color: #e5ddd5; /* WhatsApp background color */
+}
+
+.message {
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+.system {
+    background-color: #dcf8c6; /* Light green for system messages */
+    align-self: flex-start;
+}
+
+.user {
+    background-color: #34b7f1; /* Blue for user messages */
+    color: white;
+    margin-left: auto;
+}
+
+.terminal {
+    background-color: #000;
+    color: #0f0; /* Green text for terminal output */
+    font-family: 'Consolas', 'Monospace';
+    white-space: pre-wrap;
+    border-left: 3px solid #0f0;
+}
+
+#input-area {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #ccc;
+    background-color: #f7f7f7;
+}
+
+#command-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    background-color: #128c7e; /* WhatsApp send button color */
+    color: white;
+    border-radius: 20px;
+    cursor: pointer;
+}
