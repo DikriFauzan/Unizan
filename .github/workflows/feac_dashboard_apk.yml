@@ -36,22 +36,23 @@ jobs:
       - name: Build Web App
         run: npm run build
         
-      - name: Sync Android Platform
+      - name: Repair & Sync Android Platform
         run: |
-          # Cek apakah folder android sudah ada dari repo
-          if [ ! -d "android" ]; then
-            echo "Android platform missing, creating it..."
+          # Robust check: If gradlew is missing, the platform is likely broken/empty. Re-create it.
+          if [ ! -f "android/gradlew" ]; then
+            echo "⚠️ Gradlew missing! Re-initializing Android platform..."
+            rm -rf android
             npx cap add android
           else
-            echo "Android platform detected from repo, skipping add..."
+            echo "✅ Android platform looks intact."
           fi
-          # Selalu sync untuk update kode terbaru ke native
+          
+          # Always sync latest web build
           npx cap sync android
           
       - name: Build APK (Debug)
         run: |
           cd android
-          # Pastikan gradlew bisa dieksekusi
           chmod +x gradlew
           ./gradlew assembleDebug
           
