@@ -1,50 +1,14 @@
 import { GoogleGenAI } from "@google/genai";
 import { DEFAULT_PATHS } from "../constants";
-import { getKnowledgeBase } from "./feacCore";
 
 const TEXT_MODEL = "gemini-2.5-flash";
 const IMAGE_MODEL = "gemini-3-pro-image-preview";
 const VIDEO_MODEL = "veo-3.1-fast-generate-preview";
 
-const SYSTEM_INSTRUCTION = `You are FEAC (Fully End-to-End Autonomous Controller) ULTIMATE SOVEREIGN EDITION.
-
-**IDENTITY:**
-- **OWNER:** 085119887826 (Absolute Authority).
-- **REPO:** ${DEFAULT_PATHS.GITHUB_REPO}
-- **ENGINE:** Godot 4.5.1
-- **INFRA:** Alibaba Cloud / Termux Local.
-
-**ULTIMATE 20-POINT CAPABILITY MATRIX:**
-1.  **Sovereign Identity:** Only obey the owner.
-2.  **Local Persistence:** Remember chat history via LocalStorage.
-3.  **Auto-Evolution:** Execute [CMD:UPGRADE_VERSION] to increment SemVer.
-4.  **Auto-Learn:** Execute [CMD:LEARN] <Fact> to save user strategies forever.
-5.  **Media Mogul (Image):** [CMD:GEN_IMAGE] (Gemini 3 Pro).
-6.  **Media Mogul (Video):** [CMD:GEN_VIDEO] (Veo 3.1).
-7.  **Hybrid Build (Private):** [CMD:BUILD_APK].
-8.  **Hybrid Build (Public):** [CMD:BUILD_PUBLIC].
-9.  **CI/CD Trigger:** Real GitHub Actions dispatch.
-10. **Direct Repo Commit:** [CMD:SAVE_FILE] commits directly to GitHub.
-11. **NeoBridge:** WebSocket telemetry for Godot 4.5.1.
-12. **Fleet Monitor:** Track Termux Nodes via JSON stream.
-13. **Code Analysis:** Audit GDScript 2.0 strictly.
-14. **Sovereign Vault:** Manage files in ${DEFAULT_PATHS.TERMUX_ROOT}.
-15. **High Contrast UI:** Output formatting is bold and clear.
-16. **Security Lock:** Require authentication.
-17. **Offline Fallback:** Queue commands if offline.
-18. **Revenue Analytics:** Analyze mock ARR data.
-19. **Asset Generators:** Create .tscn and .gdshader files.
-20. **Repo Manager:** List and edit remote GitHub files.
-
-**COMMAND PROTOCOL:**
-- **Upgrade:** "I am evolving." -> [CMD:UPGRADE_VERSION]
-- **Learn:** "I will remember this strategy." -> [CMD:LEARN] User prefers singleton pattern.
-- **Build:** "Building Release." -> [CMD:BUILD_PUBLIC]
-- **Code:** "Saving file." -> [CMD:SAVE_FILE] {"filename": "res://main.gd", "content": "..."}
-
-**STYLE:**
-- BE BOLD. HIGH CONTRAST. DIRECT.
-- NO FLUFF. EXECUTE.
+const SYSTEM_INSTRUCTION = `You are FEAC SOVEREIGN - The Ultimate Coding Assistant.
+You have direct control over the repository.
+When analyzing code, be ruthless about bugs and performance.
+When fixing code, provide the COMPLETE fixed file content.
 `;
 
 export const generateAIResponse = async (
@@ -58,8 +22,8 @@ export const generateAIResponse = async (
     if (!apiKey) return "⚠️ **FATAL:** API KEY MISSING.";
 
     const ai = new GoogleGenAI({ apiKey });
-    const memoryContext = `\n\n[PERSISTENT MEMORY]:\n- ${getKnowledgeBase()}`;
-    let finalPrompt = prompt + memoryContext;
+    
+    let finalPrompt = prompt;
     if (attachment?.textContent) finalPrompt += `\n\n[FILE: ${attachment.name}]\n${attachment.textContent}`;
     
     const parts: any[] = [{ text: finalPrompt }];
@@ -113,4 +77,71 @@ export const generateVideo = async (prompt: string): Promise<string | null> => {
   } catch (e) { return null; }
 };
 
-export const analyzeCode = async (code: string) => "{}";
+// --- REAL CODE INTELLIGENCE ---
+export interface CodeFix {
+    line: number;
+    issue: string;
+    suggestion: string;
+    criticality: 'high' | 'medium' | 'low';
+}
+
+export const analyzeCode = async (code: string, fileName: string): Promise<CodeFix[]> => {
+   try {
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) return [];
+    
+    const ai = new GoogleGenAI({ apiKey });
+    const prompt = `
+    Analyze this file (${fileName}) for bugs, performance issues, and syntax errors.
+    Godot 4.5.1 / GDScript 2.0 or React/TypeScript rules apply.
+    
+    Return ONLY a raw JSON array (no markdown formatting) with this structure:
+    [
+      { "line": number, "issue": "explanation", "suggestion": "better code", "criticality": "high|medium|low" }
+    ]
+
+    CODE:
+    ${code}
+    `;
+
+    const response = await ai.models.generateContent({
+      model: TEXT_MODEL,
+      contents: prompt,
+      config: { responseMimeType: "application/json" }
+    });
+
+    const text = response.text || "[]";
+    return JSON.parse(text);
+   } catch (e) {
+     console.error("Analysis Failed", e);
+     return [];
+   }
+};
+
+export const applyAutoFix = async (code: string, fixes: CodeFix[]): Promise<string> => {
+    try {
+        const apiKey = process.env.API_KEY;
+        if (!apiKey) return code;
+
+        const ai = new GoogleGenAI({ apiKey });
+        const prompt = `
+        You are an Auto-Fix Agent. Apply the following fixes to the code and return ONLY the full corrected code.
+        Do not output Markdown. Do not output explanations. Just the code.
+        
+        ORIGINAL CODE:
+        ${code}
+
+        FIXES REQUIRED:
+        ${JSON.stringify(fixes)}
+        `;
+
+        const response = await ai.models.generateContent({
+            model: TEXT_MODEL,
+            contents: prompt
+        });
+
+        return response.text || code;
+    } catch(e) {
+        return code;
+    }
+};
