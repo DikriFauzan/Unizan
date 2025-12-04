@@ -19,7 +19,7 @@ jobs:
         uses: actions/setup-node@v4
         with: { node-version: '18' }
         
-      # Capacitor 5 berjalan sempurna di Java 17
+      # GUNAKAN JAVA 17 (Paling stabil untuk Capacitor 5)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -35,12 +35,14 @@ jobs:
       - name: Build Web App
         run: npm run build
         
-      - name: Re-Init Android Platform (Capacitor 5 Stable)
+      # LANGKAH KRUSIAL: Hapus folder android lama & buat baru
+      # Ini menjamin tidak ada sisa konfigurasi Capacitor 6 atau file korup
+      - name: Fresh Android Platform Generation
         run: |
-          # Hapus folder android yang mungkin korup/versi 6
+          echo "🧹 Deleting existing android folder to force clean state..."
           rm -rf android
           
-          # Generate ulang folder android dengan template v5
+          echo "✨ Generating fresh Android platform..."
           npx cap add android
           npx cap sync android
           
@@ -48,10 +50,13 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          echo "🔨 Starting Gradle Build..."
+          ./gradlew assembleDebug --stacktrace
           
-      - name: Upload APK
+      # Upload Artifact hanya jika build sukses
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: feac-dashboard-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
