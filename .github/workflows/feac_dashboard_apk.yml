@@ -19,11 +19,12 @@ jobs:
         uses: actions/setup-node@v4
         with: { node-version: '18' }
         
+      # FIX: Menggunakan Java 21 agar kompatibel dengan Gradle terbaru Android
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
           
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -38,7 +39,7 @@ jobs:
         
       - name: Repair & Sync Android Platform
         run: |
-          # Robust check: If gradlew is missing, the platform is likely broken/empty. Re-create it.
+          # Self-Healing: Jika gradlew hilang/rusak, reset platform android
           if [ ! -f "android/gradlew" ]; then
             echo "⚠️ Gradlew missing! Re-initializing Android platform..."
             rm -rf android
@@ -47,7 +48,7 @@ jobs:
             echo "✅ Android platform looks intact."
           fi
           
-          # Always sync latest web build
+          # Sync kode web terbaru ke native
           npx cap sync android
           
       - name: Build APK (Debug)
