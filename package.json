@@ -4,6 +4,10 @@
   "version": "3.0.0-Ultimate",
   "type": "module",
   "scripts": {
+    "feac:fix": "bash feac-core/autofix.sh",
+    "feac:build-apk": "bash feac-core/build-apk.sh",
+    "feac:repo": "bash feac-core/github.sh",
+    "feac:setup": "bash feac-core/setup-termux.sh",
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview"
