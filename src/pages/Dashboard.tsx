@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line
 } from 'recharts';
 import { Activity, DollarSign, Database, Globe, CheckCircle2, Terminal, ShieldAlert, Cpu, Lock, FileCode, Archive, TrendingUp, Lightbulb, Zap, Target, Loader2, Wifi, AlertTriangle, Wrench, Bug, Download, ShieldCheck, Key, Smartphone, Play, Stethoscope, Check } from 'lucide-react';
 import { TermuxNode, PendingFix, AppSettings, RevenueDataPoint, LtvDataPoint, BuildStatus, BuildDiagnosis } from '../types';
@@ -27,11 +27,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
     onBuildComplete
 }) => {
   
-  // Strategy State
   const [strategy, setStrategy] = useState<any>(null);
   const [isGeneratingStrategy, setIsGeneratingStrategy] = useState(false);
 
-  // Build & Recovery State
   const [buildStatus, setBuildStatus] = useState<BuildStatus>({
       step: 'idle',
       mode: 'private',
@@ -68,7 +66,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       if (settings.githubToken && settings.githubRepo) {
           try {
               updateBuild('cloning', 10, `> Dispatching Workflow to ${settings.githubRepo}...`);
-              await triggerWorkflow(settings, 'feac_sovereign_build.yml', { build_target: 'android', build_mode: mode });
+              await triggerWorkflow(settings, 'feac_dashboard_apk.yml', { build_target: 'android', build_mode: mode });
               updateBuild('building', 30, '> ✅ GitHub Action Triggered Successfully.');
               updateBuild('building', 40, '> Waiting for Runner Agent (Ubuntu-Latest)...');
               setTimeout(() => {
@@ -80,7 +78,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
           }
       } else {
           updateBuild('analysis', 20, '> ⚠️ NO GITHUB TOKEN. RUNNING SIMULATION.');
-          // Simulate a failure for demo purposes if "Test Fail" was clicked elsewhere (not implemented here, purely logic)
           setTimeout(() => {
               updateBuild('complete', 100, '> ✅ Private Artifact Generated (Simulated).');
               if (onBuildComplete) onBuildComplete();
@@ -91,7 +88,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const handleDiagnose = async () => {
       if (buildStatus.log.length === 0) return;
       setIsDiagnosing(true);
-      // Send logs to Gemini
       const result = await diagnoseBuildFailure(buildStatus.log);
       setDiagnosis(result);
       setIsDiagnosing(false);
@@ -100,7 +96,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const handleApplyFix = async () => {
       if (!diagnosis || !settings.githubToken) return;
       try {
-          // Strict Permission Gate: User clicked "Authorize Fix"
           await commitFileToGithub(settings, diagnosis.affectedFile, diagnosis.patchedContent, `FEAC Auto-Recovery: ${diagnosis.cause}`);
           setDiagnosis(null);
           setBuildStatus(prev => ({...prev, step: 'idle', progress: 0, log: [...prev.log, `> ✅ FIX APPLIED to ${diagnosis.affectedFile}. Ready to retry.`]}));
@@ -118,7 +113,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="p-4 md:p-8 h-full overflow-y-auto custom-scroll font-sans">
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-white/5 pb-6 animate-fade-in-up delay-0">
           <div>
             <h1 className="text-3xl md:text-4xl font-light text-white tracking-tighter flex items-center gap-3">
@@ -136,61 +130,25 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
       </div>
 
-      {/* Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-        <GlassMetric 
-            label="LEGACY CORE" 
-            value={buildStatus.legacyCoreDetected ? 'MOUNTED' : 'MISSING'} 
-            sub={buildStatus.legacyCoreDetected ? 'Keystore & Assets Ready' : 'Run Absorber Script'} 
-            icon={<Archive size={18} className={buildStatus.legacyCoreDetected ? "text-yellow-400" : "text-slate-600"}/>} 
-            active={!!buildStatus.legacyCoreDetected}
-            delay="delay-100"
-        />
-        <GlassMetric 
-            label="ACTIVE NODES" 
-            value={`${termuxNodes.length}`} 
-            sub="CPU LOAD: MONITORING" 
-            icon={<Database size={18} className={termuxNodes.length > 0 ? "text-blue-400" : "text-slate-600"}/>} 
-            active={termuxNodes.length > 0}
-            delay="delay-200"
-        />
-        <GlassMetric 
-            label="BUILD STATUS" 
-            value={buildStatus.step === 'idle' ? 'READY' : buildStatus.step === 'complete' ? 'SUCCESS' : 'BUILDING'}
-            sub={buildStatus.mode === 'public' ? 'PUBLIC AAB' : 'PRIVATE APK'} 
-            icon={<Activity size={18} className={buildStatus.step !== 'idle' && buildStatus.step !== 'complete' ? "text-yellow-400 animate-spin" : "text-slate-600"}/>} 
-            active={buildStatus.step !== 'idle'}
-            delay="delay-300"
-        />
-        <GlassMetric 
-            label="REVENUE PULSE" 
-            value="$1.2M" 
-            sub="PROJECTED ARR" 
-            icon={<TrendingUp size={18} className="text-green-400"/>} 
-            active={true}
-            delay="delay-500"
-        />
+        <GlassMetric label="LEGACY CORE" value={buildStatus.legacyCoreDetected ? 'MOUNTED' : 'MISSING'} sub={buildStatus.legacyCoreDetected ? 'Keystore & Assets Ready' : 'Run Absorber Script'} icon={<Archive size={18} className={buildStatus.legacyCoreDetected ? "text-yellow-400" : "text-slate-600"}/>} active={!!buildStatus.legacyCoreDetected} delay="delay-100" />
+        <GlassMetric label="ACTIVE NODES" value={`${termuxNodes.length}`} sub="CPU LOAD: MONITORING" icon={<Database size={18} className={termuxNodes.length > 0 ? "text-blue-400" : "text-slate-600"}/>} active={termuxNodes.length > 0} delay="delay-200" />
+        <GlassMetric label="BUILD STATUS" value={buildStatus.step === 'idle' ? 'READY' : buildStatus.step === 'complete' ? 'SUCCESS' : 'BUILDING'} sub={buildStatus.mode === 'public' ? 'PUBLIC AAB' : 'PRIVATE APK'} icon={<Activity size={18} className={buildStatus.step !== 'idle' && buildStatus.step !== 'complete' ? "text-yellow-400 animate-spin" : "text-slate-600"}/>} active={buildStatus.step !== 'idle'} delay="delay-300" />
+        <GlassMetric label="REVENUE PULSE" value="$1.2M" sub="PROJECTED ARR" icon={<TrendingUp size={18} className="text-green-400"/>} active={true} delay="delay-500" />
       </div>
 
-      {/* AI STRATEGY ENGINE */}
       <div className="mb-8 animate-fade-in-up delay-300">
           <div className="bg-gradient-to-r from-[#1a1a1a] to-[#0a0a0a] rounded-2xl p-6 border border-white/5 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-10 bg-purple-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
-              
               <div className="flex justify-between items-center mb-6 relative z-10">
                   <h3 className="text-sm font-bold text-purple-400 tracking-[0.2em] flex items-center gap-2">
                       <Lightbulb size={16}/> AI STRATEGY ENGINE
                   </h3>
-                  <button 
-                    onClick={handleGenerateStrategy}
-                    disabled={isGeneratingStrategy}
-                    className="flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 px-4 py-2 rounded-full text-xs font-bold transition-all border border-purple-500/30"
-                  >
+                  <button onClick={handleGenerateStrategy} disabled={isGeneratingStrategy} className="flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 px-4 py-2 rounded-full text-xs font-bold transition-all border border-purple-500/30">
                       {isGeneratingStrategy ? <Loader2 size={14} className="animate-spin"/> : <Zap size={14}/>}
                       {isGeneratingStrategy ? 'ANALYZING TELEMETRY...' : 'GENERATE GROWTH PLAN'}
                   </button>
               </div>
-
               {strategy ? (
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
                       <div className="col-span-1 bg-black/30 p-4 rounded-xl border border-white/5">
@@ -218,136 +176,70 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
       </div>
 
-      {/* BUILD SYSTEM & REVENUE - Main Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Build Pipeline Interface */}
           <div className="col-span-1 glass-card rounded-2xl p-6 relative overflow-hidden group shadow-2xl animate-fade-in-up delay-200 hover:border-white/10 transition-colors">
               <div className="flex justify-between items-start mb-6">
-                   <h3 className="text-xs font-bold text-slate-400 tracking-[0.2em] mb-1 flex items-center gap-2">
-                      <Terminal size={14}/> HYBRID BUILD SYSTEM
-                   </h3>
+                   <h3 className="text-xs font-bold text-slate-400 tracking-[0.2em] mb-1 flex items-center gap-2"><Terminal size={14}/> HYBRID BUILD SYSTEM</h3>
                    {buildStatus.step !== 'idle' && <span className="text-[10px] text-green-400 font-mono animate-pulse">PROCESSING</span>}
               </div>
-
               {buildStatus.step === 'idle' && (
                   <div className="flex flex-col gap-3 h-[250px] justify-center">
                       <button onClick={() => startBuild('private')} className="p-4 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all flex items-center gap-4 group">
-                          <div className="w-10 h-10 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-colors">
-                              <Lock size={18}/>
-                          </div>
-                          <div className="text-left">
-                              <div className="text-sm font-bold text-white">Private Build (APK)</div>
-                              <div className="text-[10px] text-slate-500">Local Testing • Keystore Gen</div>
-                          </div>
+                          <div className="w-10 h-10 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-colors"><Lock size={18}/></div>
+                          <div className="text-left"><div className="text-sm font-bold text-white">Private Build (APK)</div><div className="text-[10px] text-slate-500">Local Testing • Keystore Gen</div></div>
                       </button>
                       <button onClick={() => startBuild('public')} className="p-4 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all flex items-center gap-4 group">
-                          <div className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                              <Globe size={18}/>
-                          </div>
-                          <div className="text-left">
-                              <div className="text-sm font-bold text-white">Public Release (AAB)</div>
-                              <div className="text-[10px] text-slate-500">Google Play • Production Sign</div>
-                          </div>
+                          <div className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors"><Globe size={18}/></div>
+                          <div className="text-left"><div className="text-sm font-bold text-white">Public Release (AAB)</div><div className="text-[10px] text-slate-500">Google Play • Production Sign</div></div>
                       </button>
                   </div>
               )}
-
-              {/* LOGS AND DIAGNOSIS */}
               {buildStatus.step !== 'idle' && (
                   <div className="flex flex-col h-[250px]">
-                      {/* BUILD LOGS */}
                       {!diagnosis ? (
                           <div className="flex-1 bg-black/30 rounded-lg p-3 font-mono text-[10px] text-green-400 overflow-y-auto mb-3 border border-white/5">
-                              {buildStatus.log.map((l, i) => (
-                                  <div key={i} className={`mb-1.5 ${l.includes('ERROR') ? 'text-red-400 font-bold' : ''}`}>{l}</div>
-                              ))}
+                              {buildStatus.log.map((l, i) => (<div key={i} className={`mb-1.5 ${l.includes('ERROR') ? 'text-red-400 font-bold' : ''}`}>{l}</div>))}
                               {buildStatus.step !== 'complete' && buildStatus.step !== 'error' && <div className="animate-pulse">_</div>}
                           </div>
                       ) : (
-                          /* DIAGNOSIS PANEL */
                           <div className="flex-1 bg-red-900/10 rounded-lg p-3 border border-red-500/20 overflow-y-auto mb-3">
-                              <div className="flex items-center gap-2 text-red-400 font-bold text-xs mb-2">
-                                  <Stethoscope size={14}/> DIAGNOSIS COMPLETE
-                              </div>
+                              <div className="flex items-center gap-2 text-red-400 font-bold text-xs mb-2"><Stethoscope size={14}/> DIAGNOSIS COMPLETE</div>
                               <div className="text-xs text-white font-bold mb-1">{diagnosis.cause}</div>
                               <div className="text-[10px] text-slate-400 mb-3">{diagnosis.fixDescription}</div>
-                              <div className="bg-black/50 p-2 rounded text-[10px] font-mono text-green-300">
-                                  Patching: {diagnosis.affectedFile}
-                              </div>
+                              <div className="bg-black/50 p-2 rounded text-[10px] font-mono text-green-300">Patching: {diagnosis.affectedFile}</div>
                           </div>
                       )}
-                      
-                      {/* CONTROLS */}
                       {buildStatus.step === 'error' ? (
                           <div className="mt-3 flex gap-2 animate-fade-in-up">
                               {diagnosis ? (
-                                  <button 
-                                    onClick={handleApplyFix}
-                                    className="flex-1 bg-green-600 hover:bg-green-500 py-2 rounded text-xs font-bold text-white shadow-lg flex items-center justify-center gap-2"
-                                  >
-                                    <Check size={12}/> AUTHORIZE FIX
-                                  </button>
+                                  <button onClick={handleApplyFix} className="flex-1 bg-green-600 hover:bg-green-500 py-2 rounded text-xs font-bold text-white shadow-lg flex items-center justify-center gap-2"><Check size={12}/> AUTHORIZE FIX</button>
                               ) : (
-                                  <button 
-                                    onClick={handleDiagnose}
-                                    disabled={isDiagnosing}
-                                    className="flex-1 bg-yellow-600 hover:bg-yellow-500 py-2 rounded text-xs font-bold text-white shadow-lg flex items-center justify-center gap-2 animate-pulse"
-                                  >
-                                    {isDiagnosing ? <Loader2 size={12} className="animate-spin"/> : <Stethoscope size={12}/>} 
-                                    {isDiagnosing ? 'ANALYZING...' : 'DIAGNOSE & RECOVER'}
-                                  </button>
+                                  <button onClick={handleDiagnose} disabled={isDiagnosing} className="flex-1 bg-yellow-600 hover:bg-yellow-500 py-2 rounded text-xs font-bold text-white shadow-lg flex items-center justify-center gap-2 animate-pulse">{isDiagnosing ? <Loader2 size={12} className="animate-spin"/> : <Stethoscope size={12}/>} {isDiagnosing ? 'ANALYZING...' : 'DIAGNOSE & RECOVER'}</button>
                               )}
-                              <button 
-                                onClick={() => setBuildStatus(prev => ({...prev, step: 'idle'}))}
-                                className="px-4 bg-slate-700 hover:bg-slate-600 rounded text-xs font-bold text-white"
-                              >
-                                Abort
-                              </button>
+                              <button onClick={() => setBuildStatus(prev => ({...prev, step: 'idle'}))} className="px-4 bg-slate-700 hover:bg-slate-600 rounded text-xs font-bold text-white">Abort</button>
                           </div>
                       ) : buildStatus.step === 'complete' && (
                           <div className="mt-3 flex gap-2 animate-fade-in-up">
-                              <button onClick={() => setBuildStatus(prev => ({...prev, step: 'idle'}))} className="flex-1 bg-white/10 hover:bg-white/20 py-2 rounded text-xs font-bold text-white transition-colors">
-                                  Dismiss
-                              </button>
-                              <button className="flex-1 bg-green-600 hover:bg-green-500 py-2 rounded text-xs font-bold text-white shadow-lg flex items-center justify-center gap-2">
-                                  {buildStatus.mode === 'public' ? <Globe size={12}/> : <FileCode size={12}/>} 
-                                  {buildStatus.mode === 'public' ? 'Open Actions' : 'Download Artifact'}
-                              </button>
+                              <button onClick={() => setBuildStatus(prev => ({...prev, step: 'idle'}))} className="flex-1 bg-white/10 hover:bg-white/20 py-2 rounded text-xs font-bold text-white transition-colors">Dismiss</button>
+                              <button className="flex-1 bg-green-600 hover:bg-green-500 py-2 rounded text-xs font-bold text-white shadow-lg flex items-center justify-center gap-2">{buildStatus.mode === 'public' ? <Globe size={12}/> : <FileCode size={12}/>} {buildStatus.mode === 'public' ? 'Open Actions' : 'Download Artifact'}</button>
                           </div>
                       )}
                   </div>
               )}
           </div>
-
-          {/* Revenue Chart */}
           <div className="col-span-2 glass-card rounded-2xl p-6 relative overflow-hidden group shadow-2xl animate-fade-in-up delay-200 hover:border-white/10 transition-colors">
                <div className="flex justify-between items-start mb-6">
-                  <div>
-                      <h3 className="text-xs font-bold text-slate-400 tracking-[0.2em] mb-1">REVENUE STREAM</h3>
-                      <p className="text-[10px] text-slate-600 font-mono">LISTENING TO PORT: {settings.gameEndpoints?.find(p=>p.type==='telemetry')?.port || '8091'}</p>
-                  </div>
+                  <div><h3 className="text-xs font-bold text-slate-400 tracking-[0.2em] mb-1">REVENUE STREAM</h3><p className="text-[10px] text-slate-600 font-mono">LISTENING TO PORT: {settings.gameEndpoints?.find(p=>p.type==='telemetry')?.port || '8091'}</p></div>
                   {isDataAvailable && <Activity className="text-green-500 animate-pulse" size={16}/>}
               </div>
               <div className="h-[250px] w-full">
                   {isDataAvailable ? (
                       <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={revenueData}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                              <XAxis dataKey="name" stroke="#555" fontSize={10} tickLine={false} axisLine={false} />
-                              <YAxis stroke="#555" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} />
-                              <Tooltip 
-                                  cursor={{fill: 'rgba(255,255,255,0.05)'}}
-                                  contentStyle={{backgroundColor:'#0d1117', borderColor:'#333', color:'#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.3)'}} 
-                              />
-                              <Bar dataKey="amt" fill="#10b981" radius={[4, 4, 0, 0]} animationDuration={1500} />
-                          </BarChart>
+                          <BarChart data={revenueData}><CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} /><XAxis dataKey="name" stroke="#555" fontSize={10} tickLine={false} axisLine={false} /><YAxis stroke="#555" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} /><Tooltip cursor={{fill: 'rgba(255,255,255,0.05)'}} contentStyle={{backgroundColor:'#0d1117', borderColor:'#333', color:'#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.3)'}} /><Bar dataKey="amt" fill="#10b981" radius={[4, 4, 0, 0]} animationDuration={1500} /></BarChart>
                       </ResponsiveContainer>
                   ) : (
                       <div className="h-full flex flex-col items-center justify-center text-slate-700 gap-4 border border-dashed border-slate-800 rounded-xl bg-black/20">
-                          <div className="relative">
-                              <Wifi size={40} className="animate-pulse opacity-50" />
-                              <div className="absolute inset-0 border-2 border-slate-700/50 rounded-full animate-ping opacity-20"></div>
-                          </div>
+                          <div className="relative"><Wifi size={40} className="animate-pulse opacity-50" /><div className="absolute inset-0 border-2 border-slate-700/50 rounded-full animate-ping opacity-20"></div></div>
                           <p className="text-[10px] tracking-[0.2em] font-bold opacity-70">WAITING FOR TELEMETRY UPLINK</p>
                       </div>
                   )}
@@ -360,14 +252,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
 const GlassMetric = ({ label, value, sub, icon, active, delay }: any) => (
   <div className={`glass-card p-4 rounded-xl relative overflow-hidden group hover:border-white/10 transition-colors animate-fade-in-up ${delay} ${active ? 'border-t border-white/10' : 'opacity-60'}`}>
-      <div className={`absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity ${active ? 'text-white' : 'text-slate-500'}`}>
-          {icon}
-      </div>
+      <div className={`absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity ${active ? 'text-white' : 'text-slate-500'}`}>{icon}</div>
       <div className="text-[10px] font-bold text-slate-500 tracking-widest mb-1 uppercase">{label}</div>
       <div className={`text-2xl font-light tracking-tight ${active ? 'text-white' : 'text-slate-600'}`}>{value}</div>
-      <div className="text-[9px] font-mono text-slate-500 mt-2 flex items-center gap-1">
-          <div className={`w-1 h-1 rounded-full ${active ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`}></div>
-          {sub}
-      </div>
+      <div className="text-[9px] font-mono text-slate-500 mt-2 flex items-center gap-1"><div className={`w-1 h-1 rounded-full ${active ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`}></div>{sub}</div>
   </div>
 );
