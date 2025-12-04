@@ -19,36 +19,29 @@ jobs:
         uses: actions/setup-node@v4
         with: { node-version: '18' }
         
-      # FIX: Menggunakan Java 21 agar kompatibel dengan Gradle terbaru Android
+      # Capacitor 5 berjalan sempurna di Java 17
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '17'
           
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         
       - name: Install Dependencies
-        run: |
-          npm install
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-          
+        run: npm install
+        
       - name: Build Web App
         run: npm run build
         
-      - name: Repair & Sync Android Platform
+      - name: Re-Init Android Platform (Capacitor 5 Stable)
         run: |
-          # Self-Healing: Jika gradlew hilang/rusak, reset platform android
-          if [ ! -f "android/gradlew" ]; then
-            echo "⚠️ Gradlew missing! Re-initializing Android platform..."
-            rm -rf android
-            npx cap add android
-          else
-            echo "✅ Android platform looks intact."
-          fi
+          # Hapus folder android yang mungkin korup/versi 6
+          rm -rf android
           
-          # Sync kode web terbaru ke native
+          # Generate ulang folder android dengan template v5
+          npx cap add android
           npx cap sync android
           
       - name: Build APK (Debug)
