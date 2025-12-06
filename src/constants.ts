@@ -1,6 +1,6 @@
 import { TermuxNode, NeoAgentStatus, GameEndpoint } from './types';
 
-export const APP_VERSION = "4.1.0-Ultimate-Architect";
+export const APP_VERSION = "4.0.0-Ultimate-Architect";
 export const USER_PHONE = "085119887826";
 
 export const DEFAULT_PATHS = {
@@ -16,7 +16,7 @@ export const DEFAULT_GAME_PORTS: GameEndpoint[] = [
 ];
 
 export const INITIAL_ROOMS = [
-  { id: 'admin-ai', name: 'FEAC BRAIN (v4.1)', type: 'ai', unreadCount: 0, status: 'online', icon: 'brain' },
+  { id: 'admin-ai', name: 'FEAC BRAIN (v4.0)', type: 'ai', unreadCount: 0, status: 'online', icon: 'brain' },
   { id: 'feac-conversation', name: 'General Chat', type: 'ai', unreadCount: 0, status: 'online', icon: 'message-circle' },
   { id: 'neo-bridge', name: 'Godot 4.5.1 Bridge', type: 'bridge', unreadCount: 0, status: 'online', icon: 'gamepad' },
   { id: 'termux-node', name: 'Fleet Monitor', type: 'system', unreadCount: 0, status: 'offline', icon: 'terminal' },
@@ -28,6 +28,6 @@ export const NEO_AGENTS: NeoAgentStatus[] = [
   { id: 'agent-code', name: 'CodeAgent', type: 'CodeAgent', status: 'idle', lastAction: 'Ready' },
 ];
 
-export const MOCK_REVENUE_DATA = [{ name: 'Jan', uv: 4000, pv: 2400, amt: 2400 }, { name: 'Feb', uv: 3000, pv: 1398, amt: 2210 }];
-export const MOCK_LTV_DATA = [{ day: 'D1', ltv: 0.5 }, { day: 'D30', ltv: 4.8 }];
+export const MOCK_REVENUE_DATA = [{ name: 'Jan', uv: 4000, pv: 2400, amt: 2400 }];
+export const MOCK_LTV_DATA = [{ day: 'D1', ltv: 0.5 }];
 export const MOCK_TERMUX_NODES = [];

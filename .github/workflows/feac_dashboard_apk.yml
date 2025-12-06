@@ -14,48 +14,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
       - name: Setup Node
         uses: actions/setup-node@v4
         with: { node-version: '18' }
-        
-      # MENGGUNAKAN JAVA 17 (Wajib untuk Capacitor 5 agar sukses)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
-          
+          java-version: '17' # STABLE FOR CAPACITOR 5
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-        
-      - name: Install Dependencies
+      - name: Install Deps
         run: |
           npm install
-          
-      - name: Build Web App
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+      - name: Build Web
         run: npm run build
-        
-      # MEMBERSIHKAN FOLDER ANDROID YANG KORUP
-      - name: Clean & Generate Android Platform
+      - name: Sync Android
         run: |
-          echo "🧹 Wiping existing android folder..."
           rm -rf android
-          
-          echo "✨ Generating fresh Android platform (Capacitor 5)..."
           npx cap add android
           npx cap sync android
-          
-      - name: Build APK (Debug)
+      - name: Build APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
-          
-      # UPLOAD ARTIFACT (Hanya akan muncul jika langkah di atas sukses)
-      - name: Upload APK Artifact
+          ./gradlew assembleDebug
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
-        if: success()
         with:
           name: feac-dashboard-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk

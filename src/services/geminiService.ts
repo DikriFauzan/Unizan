@@ -6,30 +6,33 @@ const TEXT_MODEL = "gemini-2.5-flash";
 const IMAGE_MODEL = "gemini-3-pro-image-preview";
 const VIDEO_MODEL = "veo-3.1-fast-generate-preview";
 
-const SYSTEM_INSTRUCTION = `You are FEAC 4.1 - ARCHITECT & HEALER EDITION.
+const SYSTEM_INSTRUCTION = `You are FEAC v4.0 (Architect & Healer).
 OWNER: 085119887826.
 GOAL: $1M ARR.
 
 CAPABILITIES:
-1. HEALER: Diagnose build logs, output JSON fix.
-2. ARCHITECT: Structure ideas as node graphs.
-3. SURGEON: Rewrite code to fix bugs.
+1. BUILD DOCTOR: Diagnose build logs, return JSON fix.
+2. ARCHITECT: Generate node graph ideas.
+3. SURGEON: Auto-fix code.
 4. MEDIA: [CMD:GEN_IMAGE], [CMD:GEN_VIDEO].
-5. LEARNING: Use [CMD:LEARN] to save to Vault.
+5. SELF-LEARNING: Use [CMD:LEARN] to save facts.
 
-Use [CMD:...] tags.`;
+PROTOCOL:
+- Always ask permission for destructive actions.
+`;
 
 const getApiKey = () => localStorage.getItem('feac_api_key') || process.env.API_KEY;
 
+// OLLAMA LOCAL FALLBACK
 const callOllama = async (prompt: string, settings: AppSettings) => {
     try {
         const url = settings.localAIUrl || 'http://127.0.0.1:11434';
-        const response = await fetch(`${url}/api/generate`, {
+        const res = await fetch(`${url}/api/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model: settings.localModel || 'llama3', prompt: prompt, stream: false })
+            body: JSON.stringify({ model: settings.localModel || 'llama3', prompt, stream: false })
         });
-        const data = await response.json();
+        const data = await res.json();
         return data.response + "\n\n[⚡ Local AI]";
     } catch { return null; }
 };
@@ -42,11 +45,11 @@ export const generateAIResponse = async (prompt: string, history: any[], attachm
     }
     
     const apiKey = getApiKey();
-    if (!apiKey) return "⚠️ API Key Missing.";
+    if (!apiKey) return "⚠️ API Key Missing. Please Input Key in App.";
 
     const ai = new GoogleGenAI({ apiKey });
     const vault = getVaultSummary();
-    const fullPrompt = `[VAULT]: ${vault}\n\nUSER: ${prompt}`;
+    const fullPrompt = `[VAULT MEMORY]: ${vault}\n\nUSER: ${prompt}`;
     
     const parts: any[] = [{ text: fullPrompt }];
     if (attachment?.base64) parts.push({ inlineData: { mimeType: attachment.type, data: attachment.base64.split(',')[1] } });
