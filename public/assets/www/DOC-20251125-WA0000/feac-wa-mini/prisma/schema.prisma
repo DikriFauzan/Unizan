@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./feac-wa-mini.db"
+}
+
+model User {
+  id                String   @id @default(cuid())
+  phoneNumber       String   @unique
+  name              String?
+  avatar            String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  loginSessions     LoginSession[]
+  totpSecrets       TotpSecret[]
+  fingerprintKeys   FingerprintKey[]
+  chatMessages      ChatMessage[]
+  commands          Command[]
+  securityAuditLogs SecurityAuditLog[]
+  
+  @@map("users")
+}
+
+model LoginSession {
+  id          String   @id @default(cuid())
+  userId      String
+  token       String   @unique
+  ipAddress   String?
+  userAgent   String?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("login_sessions")
+}
+
+model TotpSecret {
+  id          String   @id @default(cuid())
+  userId      String
+  secret      String
+  backupCodes String[]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("totp_secrets")
+}
+
+model FingerprintKey {
+  id          String   @id @default(cuid())
+  userId      String
+  fingerprint String   @unique
+  deviceInfo  String?
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("fingerprint_keys")
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  displayName String
+  type        String   // 'termux-bridge', 'neoengine', 'admin'
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  chatMessages ChatMessage[]
+  
+  @@map("rooms")
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  roomId    String
+  userId    String?
+  content   String
+  type      String   @default("text") // text, command, event, error, success
+  metadata  Json?
+  createdAt DateTime @default(now())
+  
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@map("chat_messages")
+}
+
+model Command {
+  id          String   @id @default(cuid())
+  userId      String
+  command     String
+  args        Json?
+  status      String   @default("pending") // pending, running, completed, failed
+  result      String?
+  error       String?
+  executedAt  DateTime?
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("commands")
+}
+
+model NeoEngineLog {
+  id          String   @id @default(cuid())
+  eventType   String
+  source      String
+  destination String
+  command     String
+  payload     Json
+  signature   String
+  timestamp   DateTime @default(now())
+  
+  @@map("neoengine_logs")
+}
+
+model CodeAnalysis {
+  id          String   @id @default(cuid())
+  filePath    String
+  language    String
+  issues      Json
+  complexity  Float?
+  qualityScore Float?
+  analyzedAt  DateTime @default(now())
+  
+  @@map("code_analysis")
+}
+
+model RepoState {
+  id          String   @id @default(cuid())
+  repoUrl     String
+  branch      String
+  commitHash  String
+  lastSync    DateTime @default(now())
+  
+  @@map("repo_state")
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  name        String
+  key         String   @unique
+  permissions Json
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime?
+  
+  @@map("api_keys")
+}
+
+model BuildHistory {
+  id          String   @id @default(cuid())
+  projectName String
+  version     String
+  status      String   // success, failed, building
+  buildLog    String?
+  outputPath  String?
+  createdAt   DateTime @default(now())
+  
+  @@map("build_history")
+}
+
+model AutofixHistory {
+  id          String   @id @default(cuid())
+  filePath    String
+  issueType   String
+  fixApplied  String
+  success     Boolean
+  createdAt   DateTime @default(now())
+  
+  @@map("autofix_history")
+}
+
+model AiUpgradeHistory {
+  id          String   @id @default(cuid())
+  version     String
+  changes     String[]
+  approved    Boolean  @default(false)
+  appliedAt   DateTime?
+  createdAt   DateTime @default(now())
+  
+  @@map("ai_upgrade_history")
+}
+
+model AnalyticsMetrics {
+  id          String   @id @default(cuid())
+  metricType  String
+  value       Float
+  metadata    Json?
+  timestamp   DateTime @default(now())
+  
+  @@map("analytics_metrics")
+}
+
+model AbTestingResult {
+  id          String   @id @default(cuid())
+  testName    String
+  variant     String
+  conversions Int      @default(0)
+  impressions Int      @default(0)
+  startDate   DateTime @default(now())
+  endDate     DateTime?
+  
+  @@map("ab_testing_results")
+}
+
+model SecurityAuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  action      String
+  resource    String
+  ipAddress   String?
+  userAgent   String?
+  success     Boolean
+  details     Json?
+  createdAt   DateTime @default(now())
+  
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@map("security_audit_logs")
+}
