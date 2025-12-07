@@ -1,0 +1,71 @@
+name: Build FEAC Dashboard APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'capacitor.config.json'
+      - '.github/workflows/feac_dashboard_apk.yml'
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with: { node-version: '18' }
+        
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        
+      - name: Install Dependencies
+        run: |
+          npm install
+          # Pastikan capacitor CLI terinstall lokal
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          
+      - name: Build Web App
+        run: npm run build
+        
+      - name: Initialize & Sync Android
+        run: |
+          # 1. Hapus folder android lama (bersih-bersih)
+          echo "🧹 Cleaning old android folder..."
+          rm -rf android
+          
+          # 2. Cek Config, buat jika hilang (Safety Net)
+          if [ ! -f "capacitor.config.json" ]; then
+             echo "⚠️ Config missing, generating default..."
+             npx cap init "FEAC Sovereign" "com.feac.sovereign" --web-dir dist
+          fi
+
+          # 3. Tambahkan Platform Android
+          echo "✨ Adding Android platform..."
+          npx cap add android
+          
+          # 4. Sync codingan web ke android
+          echo "🔄 Syncing Web Assets..."
+          npx cap sync android
+          
+      - name: Build APK (Debug)
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+          
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: feac-dashboard-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk

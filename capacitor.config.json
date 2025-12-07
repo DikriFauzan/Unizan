@@ -1,0 +1,14 @@
+{
+  "appId": "com.feac.sovereign",
+  "appName": "FEAC Sovereign",
+  "webDir": "dist",
+  "loggingBehavior": "production",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

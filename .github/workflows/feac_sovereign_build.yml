@@ -1,0 +1,44 @@
+name: FEAC Sovereign Godot 4.5.1 Build
+on:
+  workflow_dispatch:
+    inputs:
+      build_mode:
+        required: true
+        default: 'private'
+        type: choice
+        options: [private, public]
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: 'temurin', java-version: '17' }
+      - uses: android-actions/setup-android@v3
+      - name: Install Godot 4.5.1 (Custom)
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
+          unzip Godot_v4.3-stable_linux.x86_64.zip
+          mv Godot_v4.3-stable_linux.x86_64 /usr/local/bin/godot
+          chmod +x /usr/local/bin/godot
+          mkdir -p ~/.local/share/godot/templates/4.5.1.stable
+          wget -q https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz
+          unzip Godot_v4.3-stable_export_templates.tpz
+          mv templates/* ~/.local/share/godot/templates/4.5.1.stable/
+      - name: Build Logic
+        run: |
+          mkdir -p build/android
+          if [ "${{ inputs.build_mode }}" == "private" ]; then
+             echo "BUILDING PRIVATE APK..."
+             godot --headless --export-debug "Android" build/android/feac_debug.apk
+          else
+             echo "BUILDING PUBLIC AAB..."
+             godot --headless --export-release "Android" build/android/feac_release.aab
+          fi
+      - uses: actions/upload-artifact@v4
+        with: { name: feac-build, path: build/android/* }
