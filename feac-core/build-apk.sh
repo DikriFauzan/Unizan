@@ -10,7 +10,7 @@ GODOT_PATH="/data/data/com.termux/files/home/godot/godot"
 PROJECT_PATH="/sdcard/Documents/Dikri/feac-wa-mini"
 OUTPUT_PATH="/sdcard/Documents/Dikri/apk-release.apk"
 EXPORT_TEMPLATE="Android"
-BUILD_VERSION=${1:-"1.0.0"}
+BUILD_VERSION=${1:-"5.0.0"}
 BUILD_NUMBER=${2:-"1"}
 
 echo "🔨 FEAC WA Mini APK Builder"
