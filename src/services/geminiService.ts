@@ -6,7 +6,7 @@ const TEXT_MODEL = "gemini-2.5-flash";
 const IMAGE_MODEL = "gemini-3-pro-image-preview";
 const VIDEO_MODEL = "veo-3.1-fast-generate-preview";
 
-const SYSTEM_INSTRUCTION = `You are FEAC v4.0 (Architect & Healer).
+const SYSTEM_INSTRUCTION = `You are FEAC v5.0 (Final Genesis).
 OWNER: 085119887826.
 GOAL: $1M ARR.
 

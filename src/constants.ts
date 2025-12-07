@@ -1,6 +1,6 @@
 import { TermuxNode, NeoAgentStatus, GameEndpoint } from './types';
 
-export const APP_VERSION = "4.0.0-Ultimate-Architect";
+export const APP_VERSION = "5.0.0-Final-Genesis";
 export const USER_PHONE = "085119887826";
 
 export const DEFAULT_PATHS = {
@@ -16,7 +16,7 @@ export const DEFAULT_GAME_PORTS: GameEndpoint[] = [
 ];
 
 export const INITIAL_ROOMS = [
-  { id: 'admin-ai', name: 'FEAC BRAIN (v4.0)', type: 'ai', unreadCount: 0, status: 'online', icon: 'brain' },
+  { id: 'admin-ai', name: 'FEAC BRAIN (v5.0)', type: 'ai', unreadCount: 0, status: 'online', icon: 'brain' },
   { id: 'feac-conversation', name: 'General Chat', type: 'ai', unreadCount: 0, status: 'online', icon: 'message-circle' },
   { id: 'neo-bridge', name: 'Godot 4.5.1 Bridge', type: 'bridge', unreadCount: 0, status: 'online', icon: 'gamepad' },
   { id: 'termux-node', name: 'Fleet Monitor', type: 'system', unreadCount: 0, status: 'offline', icon: 'terminal' },
