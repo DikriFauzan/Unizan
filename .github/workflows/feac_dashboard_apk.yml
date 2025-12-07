@@ -8,7 +8,6 @@ on:
       - 'package.json'
       - 'capacitor.config.json'
       - '.github/workflows/feac_dashboard_apk.yml'
-      - 'android/**'
 
 jobs:
   build-apk:
@@ -32,30 +31,41 @@ jobs:
       - name: Install Dependencies
         run: |
           npm install
+          # Pastikan capacitor CLI terinstall lokal
+          npm install @capacitor/core @capacitor/cli @capacitor/android
           
       - name: Build Web App
         run: npm run build
         
-      - name: Sync Capacitor
+      - name: Initialize & Sync Android
         run: |
-          npx cap sync android
+          # 1. Hapus folder android lama (bersih-bersih)
+          echo "🧹 Cleaning old android folder..."
+          rm -rf android
           
-      # [FIX] CACHE PURGE: Membersihkan cache gradle lama agar versi 2.1.0 musnah
-      - name: Clean Build Cache (Anti-Zombie)
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew clean --no-build-cache
+          # 2. Cek Config, buat jika hilang (Safety Net)
+          if [ ! -f "capacitor.config.json" ]; then
+             echo "⚠️ Config missing, generating default..."
+             npx cap init "FEAC Sovereign" "com.feac.sovereign" --web-dir dist
+          fi
+
+          # 3. Tambahkan Platform Android
+          echo "✨ Adding Android platform..."
+          npx cap add android
+          
+          # 4. Sync codingan web ke android
+          echo "🔄 Syncing Web Assets..."
+          npx cap sync android
           
       - name: Build APK (Debug)
         run: |
           cd android
-          # Memaksa assembleDebug baru
-          ./gradlew assembleDebug
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
           
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: feac-dashboard-v5.0.0
+          name: feac-dashboard-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
