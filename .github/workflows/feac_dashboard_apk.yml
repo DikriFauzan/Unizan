@@ -8,40 +8,54 @@ on:
       - 'package.json'
       - 'capacitor.config.json'
       - '.github/workflows/feac_dashboard_apk.yml'
+      - 'android/**'
 
 jobs:
   build-apk:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup Node
         uses: actions/setup-node@v4
         with: { node-version: '18' }
+        
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17' # STABLE FOR CAPACITOR 5
+          java-version: '17'
+          
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-      - name: Install Deps
+        
+      - name: Install Dependencies
         run: |
           npm install
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-      - name: Build Web
+          
+      - name: Build Web App
         run: npm run build
-      - name: Sync Android
+        
+      - name: Sync Capacitor
         run: |
-          rm -rf android
-          npx cap add android
           npx cap sync android
-      - name: Build APK
+          
+      # [FIX] CACHE PURGE: Membersihkan cache gradle lama agar versi 2.1.0 musnah
+      - name: Clean Build Cache (Anti-Zombie)
         run: |
           cd android
           chmod +x gradlew
+          ./gradlew clean --no-build-cache
+          
+      - name: Build APK (Debug)
+        run: |
+          cd android
+          # Memaksa assembleDebug baru
           ./gradlew assembleDebug
-      - name: Upload Artifact
+          
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
+        if: success()
         with:
-          name: feac-dashboard-apk
+          name: feac-dashboard-v5.0.0
           path: android/app/build/outputs/apk/debug/app-debug.apk
