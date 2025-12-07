@@ -1,3 +1,4 @@
+export const APP_VERSION = '5.0.0-Final-Genesis';
 import { TermuxNode, NeoAgentStatus, GameEndpoint } from './types';
 
 export const APP_VERSION = "5.0.0-Final-Genesis";
