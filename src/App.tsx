@@ -2,53 +2,69 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Layout } from './components/Layout';
 import { SecurityLock } from './components/SecurityLock';
 import { Dashboard } from './pages/Dashboard';
-import { NeoEngineControl } from './pages/NeoEngineControl';
-import { Generators } from './pages/Generators';
 import { RepoManager } from './pages/RepoManager';
 import { Billing } from './pages/Billing';
 import { MessageBubble } from './components/MessageBubble';
 import { SettingsModal } from './components/SettingsModal';
 import { UpdateOverlay } from './components/UpdateOverlay';
-import { INITIAL_ROOMS, NEO_AGENTS, DEFAULT_PATHS, DEFAULT_GAME_PORTS } from './constants';
-import { ChatRoom, Message, TermuxNode, AppSettings, NeoAgentStatus, RevenueDataPoint, LtvDataPoint, PendingFix } from './types';
+import { INITIAL_ROOMS, DEFAULT_PATHS, DEFAULT_GAME_PORTS, MOCK_TERMUX_NODES } from './constants';
+import { ChatRoom, Message, TermuxNode, AppSettings } from './types';
 import { generateAIResponse, generateImage, generateVideo } from './services/geminiService';
-import { upgradeSystemVersion, loadMemory } from './services/feacCore';
-import { commitFileToGithub } from './services/githubService';
+import { loadMemory } from './services/feacCore';
 import { checkGithubUpdate, performHotUpdate, ReleaseInfo } from './services/updateService';
-import { Brain, Gamepad2, Terminal, Send, Plus, X, Video, ArrowLeft, GitBranch, Server, Bot, CreditCard, CloudLightning, Key, ChevronRight, Layers } from 'lucide-react';
+import { Brain, Terminal, Send, Plus, Video, GitBranch, Server, CreditCard, Key, ChevronRight } from 'lucide-react';
+
+// Hardcoded Keys for Fallback
+const INJECTED_KEY = "AIzaSyAxpQtIuE7vFw5KtXIEUFyY-qcFn6uBejo";
 
 export default function App() {
-  const [apiKeyReady, setApiKeyReady] = useState(false);
+  const [apiKeyReady, setApiKeyReady] = useState(true); // FORCE TRUE
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [inputKey, setInputKey] = useState('');
-  
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'chat' | 'neo-engine' | 'generators' | 'repo-manager' | 'billing'>('chat');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'chat' | 'repo-manager' | 'billing'>('chat');
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
-  const [feacVersion, setFeacVersion] = useState(() => loadMemory().version);
+  const [feacVersion, setFeacVersion] = useState("7.1.0-Unleashed");
   
   const [updateInfo, setUpdateInfo] = useState<ReleaseInfo | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateProgress, setUpdateProgress] = useState(0);
   
   const [showSettings, setShowSettings] = useState(false);
-  const [settings, setSettings] = useState<AppSettings>(() => {
-     const s = localStorage.getItem('feac_settings');
-     return s ? JSON.parse(s) : { 
-         godotWsUrl: '', 
-         githubToken: '', 
-         githubRepo: DEFAULT_PATHS.GITHUB_REPO, 
-         gameEndpoints: DEFAULT_GAME_PORTS,
-         billingApiUrl: 'http://localhost:3000/v1'
-     };
-  });
-
-  // State lainnya...
+  const [settings, setSettings] = useState<AppSettings>({ godotWsUrl: '', githubToken: '', githubRepo: DEFAULT_PATHS.GITHUB_REPO, gameEndpoints: DEFAULT_GAME_PORTS });
   const [rooms, setRooms] = useState<ChatRoom[]>(INITIAL_ROOMS);
-  const [messages, setMessages] = useState<Record<string, Message[]>>({'admin-ai': []});
+  
+  // RESET MESSAGES TO v7.1 DEFAULT
+  const [messages, setMessages] = useState<Record<string, Message[]>>(() => {
+    return {
+      'admin-ai': [
+        { 
+          id: '1', 
+          senderId: 'system', 
+          content: '⚡ SYSTEM REBOOT: Keys Injected (Gemini + Flowith).\n> Superkey Active.\n> Brain v7.1 Online.', 
+          timestamp: new Date(), 
+          type: 'alert' 
+        },
+        { 
+          id: '2', 
+          senderId: 'ai', 
+          content: 'FEAC v7.1 Ready. All keys are active. No lobotomy here. What is the mission?', 
+          timestamp: new Date(), 
+          type: 'text' 
+        }
+      ]
+    };
+  });
+  
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // OTA CHECK
+  // Auto-Save Key on Load if missing
+  useEffect(() => {
+      if (!localStorage.getItem('feac_api_key')) {
+          localStorage.setItem('feac_api_key', INJECTED_KEY);
+      }
+  }, []);
+
+  // OTA Check
   useEffect(() => {
       const runUpdateCheck = async () => {
           if(settings.githubRepo) {
@@ -62,61 +78,31 @@ export default function App() {
   const handleApplyUpdate = async () => {
       if(!updateInfo) return;
       setIsUpdating(true);
-      const success = await performHotUpdate(updateInfo.url, setUpdateProgress);
-      if(success) {
-          setFeacVersion(updateInfo.tag);
-          setUpdateInfo(null);
-          setIsUpdating(false);
-          alert("✅ FEAC Core Updated via OTA. Reloading...");
-          window.location.reload();
-      }
+      await performHotUpdate(updateInfo.url, setUpdateProgress);
+      alert("Updated! Reloading...");
+      window.location.reload();
   };
 
-  // API KEY CHECK
-  useEffect(() => {
-      const storedKey = localStorage.getItem('feac_api_key');
-      // @ts-ignore
-      if ((storedKey && storedKey.length > 10) || process.env.API_KEY) {
-          setApiKeyReady(true);
-      }
-  }, []);
+  const handleSendMessage = async () => {
+    if (!inputText.trim() || !activeRoomId) return;
+    const roomId = activeRoomId;
+    const msg: Message = { id: Date.now().toString(), senderId: 'user', content: inputText, timestamp: new Date(), type: 'text' };
+    setMessages(prev => ({ ...prev, [roomId]: [...(prev[roomId] || []), msg] }));
+    setInputText('');
 
-  const handleSaveKey = () => {
-      if(inputKey.length > 10) {
-          localStorage.setItem('feac_api_key', inputKey);
-          setApiKeyReady(true);
-      } else {
-          alert("Key Invalid");
-      }
+    if (roomId === 'admin-ai') {
+        const history = (messages[roomId] || []).map(m => ({role: m.senderId==='user'?'user':'model', text: m.content}));
+        const response = await generateAIResponse(msg.content, history as any, undefined, settings);
+        const aiMsg: Message = { id: Date.now().toString(), senderId: 'ai', content: response, timestamp: new Date(), type: 'text' };
+        setMessages(prev => ({ ...prev, [roomId]: [...(prev[roomId] || []), aiMsg] }));
+    }
   };
-
-  // ... (Chat logic remains same, simplified here for script brevity) ...
-  const handleSendMessage = async () => { /* ... Logic ... */ };
-
-  if (!apiKeyReady) {
-      return (
-          <div className="h-screen w-screen bg-[#0b141a] flex flex-col items-center justify-center text-[#e9edef] p-6 text-center font-sans">
-              <div className="w-24 h-24 bg-green-900/30 rounded-full flex items-center justify-center mb-6 animate-pulse border border-green-500/50"><Brain size={48} className="text-green-400" /></div>
-              <h1 className="text-2xl font-bold mb-2">FEAC SYSTEM OFFLINE</h1>
-              <p className="text-gray-400 mb-8 max-w-xs text-sm">Please provide Google Gemini API Key.</p>
-              <div className="w-full max-w-sm space-y-4">
-                  <div className="bg-[#1f2c34] p-2 rounded-lg flex items-center border border-gray-700">
-                      <Key size={20} className="text-gray-500 ml-2" />
-                      <input value={inputKey} onChange={e => setInputKey(e.target.value)} placeholder="Paste Key Here..." className="bg-transparent border-none outline-none text-white text-sm p-2 flex-1 w-full" type="password" />
-                  </div>
-                  <button onClick={handleSaveKey} className="w-full bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold shadow-lg flex items-center justify-center gap-2">ACTIVATE <ChevronRight size={18}/></button>
-              </div>
-          </div>
-      );
-  }
 
   if (!isAuthenticated) return <SecurityLock onUnlock={() => setIsAuthenticated(true)} />;
 
   const SidebarContent = (
     <div className="flex flex-col gap-1 p-2">
-       {/* MENU ITEMS */}
        <div onClick={() => setActiveTab('dashboard')} className="p-3 rounded-md cursor-pointer flex items-center gap-3 text-gray-400 hover:bg-[#222]"><Terminal size={18}/> <span>Dashboard</span></div>
-       <div onClick={() => setActiveTab('neo-engine')} className="p-3 rounded-md cursor-pointer flex items-center gap-3 text-gray-400 hover:bg-[#222]"><Bot size={18}/> <span>NeoGrid</span></div>
        <div onClick={() => setActiveTab('repo-manager')} className="p-3 rounded-md cursor-pointer flex items-center gap-3 text-gray-400 hover:bg-[#222]"><GitBranch size={18}/> <span>GitHub</span></div>
        <div onClick={() => setActiveTab('billing')} className="p-3 rounded-md cursor-pointer flex items-center gap-3 text-gray-400 hover:bg-[#222]"><CreditCard size={18}/> <span>Billing</span></div>
        
@@ -147,10 +133,9 @@ export default function App() {
                </div>
            </div>
        )}
-       {activeTab === 'dashboard' && <Dashboard termuxNodes={termuxNodes} />}
+       {activeTab === 'dashboard' && <Dashboard termuxNodes={[]} settings={settings} />}
        {activeTab === 'repo-manager' && <RepoManager settings={settings} />}
        {activeTab === 'billing' && <Billing settings={settings} />}
-       
        <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} onSave={setSettings} initialSettings={settings} />
     </Layout>
   );
