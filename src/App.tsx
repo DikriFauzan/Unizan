@@ -1,3 +1,6 @@
+import ApiKeyCenter from './pages/ApiKeyCenter';
+import TokenEconomy from './pages/TokenEconomy';
+import SuperKeyCenter from './pages/SuperKeyCenter';
 import React, { useState, useEffect, useRef } from 'react';
 import { Layout } from './components/Layout';
 import { SecurityLock } from './components/SecurityLock';
