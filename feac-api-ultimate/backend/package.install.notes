@@ -1,0 +1,2 @@
+# NOTE: run these in backend folder (or during docker build)
+# npm install bullmq ioredis ws uuid child_process
