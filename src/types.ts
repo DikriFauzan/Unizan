@@ -18,11 +18,19 @@ export interface AppSettings {
   githubToken: string;
   githubRepo: string;
   gameEndpoints: GameEndpoint[];
-  // Hybrid Config
-  billingApiUrl: string; // URL ke Backend Node.js (Stripe)
   useLocalAI?: boolean;
   localAIUrl?: string;
   localModel?: string;
+  apiKey?: string;       // Gemini
+  flowithApiKey?: string; // Flowith
+  superKey?: string;     // FEAC Sovereign Key
+  billingApiUrl?: string;
+}
+
+export interface CodeFix {
+  line: number;
+  issue: string;
+  fix: string;
 }
 
 export interface Message {
@@ -88,10 +96,14 @@ export interface TermuxNode {
   logs: string[];
 }
 
+export type NeoAgentType = 
+  | 'AISupervisor' | 'ShellAgent' | 'RepoAgent' | 'CodeAgent' | 'BuildAgent' 
+  | 'RenderAgent' | 'SecurityAgent' | 'AssetGeneratorAgent' | 'MapGeneratorAgent';
+
 export interface NeoAgentStatus {
   id: string;
   name: string;
-  type: string;
+  type: NeoAgentType;
   status: 'idle' | 'working' | 'error' | 'offline';
   lastAction: string;
 }
@@ -107,5 +119,5 @@ export interface PendingFix {
 
 export interface RevenueDataPoint { name: string; uv: number; pv: number; amt: number; }
 export interface LtvDataPoint { day: string; ltv: number; }
-export interface UpdateState { available: boolean; version: string; downloadUrl?: string; notes?: string; }
+export interface ReleaseInfo { tag: string; url: string; body: string; published_at: string; }
 export type GeneratorType = 'ui-layout' | 'shader' | 'apk-signer';
