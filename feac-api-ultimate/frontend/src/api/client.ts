@@ -1,3 +1,4 @@
+import { toast } from '../notify/ToastBus';
 import axios from "axios";
 
 const api = axios.create({
@@ -15,3 +16,17 @@ api.interceptors.request.use((config) => {
 });
 
 export default api;
+
+// AUTO ERROR PIPELINE → convert all API errors into toast notifications
+api.interceptors.response.use(
+    (res) => res,
+    (err) => {
+        const msg =
+            err?.response?.data?.message ||
+            err?.message ||
+            "Unknown FEAC API Error";
+
+        toast(msg, "error");
+        return Promise.reject(err);
+    }
+);
