@@ -1,3 +1,4 @@
+import BuildConsole from './console/BuildConsole';
 import ApiKeyCenter from './pages/ApiKeyCenter';
 import TokenEconomy from './pages/TokenEconomy';
 import SuperKeyCenter from './pages/SuperKeyCenter';
