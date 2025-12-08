@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # 1. The Main Brain (Node.js)
+  feac-api:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - FEAC_INTERNAL_KEY=FEAC-SVR-1765178477-
+      - EMERGENT_URL=http://emergent:9001/solve
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+      - emergent
+
+  # 2. Deep Reasoning Unit (Python)
+  emergent:
+    build: ./emergent
+    command: python server.py
+    ports:
+      - "9001:9001"
+    volumes:
+      - ./artifacts:/artifacts
+
+  # 3. Memory & Queue
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  # 4. Object Storage (Artifacts)
+  minio:
+    image: minio/minio
+    command: server /data
+    ports:
+      - "9000:9000"
+      - "9001:9002"
