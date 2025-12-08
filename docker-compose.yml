@@ -44,3 +44,12 @@ services:
       - "9002:9002"
     volumes:
       - ./flowith:/flowith
+
+  billing:
+    build: ./billing
+    ports:
+      - "9003:9003"
+    depends_on:
+      - redis
+    environment:
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
