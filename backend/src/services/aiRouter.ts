@@ -1,32 +1,45 @@
-import axios from 'axios';
+import axios from "axios";
+import { TokenEngine } from "../billing/tokenEngine";
 
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
-const EMERGENT_URL = process.env.EMERGENT_URL || "http://emergent:9001/solve";
-const FLOWITH_URL = process.env.FLOWITH_URL || "http://flowith:9002/reason";
+const GEMINI_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
 
-export async function routeAI(prompt: string, context: any, user: any) {
-    // 1. Priority: Gemini (Google)
-    try {
-        if (!process.env.GOOGLE_API_KEY) throw new Error("No Gemini Key");
-        // ... call gemini logic ...
-        return { provider: 'gemini', output: "Gemini Response Placeholder" };
-    } catch (e) {
-        console.warn("Gemini Down, Switching to Failover...");
+export async function routeAI(prompt: string, mode: string, user: any) {
+  console.log("[AI] Mode:", mode, "User:", user.id);
+
+  // 1. BILLING
+  await TokenEngine.bill(user, mode.toUpperCase() as any);
+
+  // 2. Primary: Gemini
+  try {
+    if (process.env.GOOGLE_API_KEY) {
+      return {
+        provider: "gemini",
+        output: "Gemini simulated response"
+      };
     }
+    throw new Error("NO_GEMINI_KEY");
+  } catch (e) {
+    console.log("Gemini failed, failover...");
+  }
 
-    // 2. Failover: Emergent Engine (Local/Internal)
-    try {
-        const res = await axios.post(EMERGENT_URL, {
-            prompt,
-            depth: user.tier === 'unlimited' ? 10 : 3
-        });
-        return { provider: 'emergent', output: res.data.output };
-    } catch (e) {
-        console.warn("Emergent Down, Switching to Flowith...");
-    }
+  // 3. Failover: Emergent
+  try {
+    const res = await axios.post(process.env.EMERGENT_URL!, {
+      prompt,
+      depth: user.bypass ? 10 : 3
+    });
+    return {
+      provider: "emergent",
+      output: res.data.output
+    };
+  } catch (e) {
+    console.log("Emergent offline...");
+  }
 
-    // 3. Failover: Flowith (External Agent)
-    // ... flowith logic ...
-    
-    return { provider: 'system', output: "All systems critical. Manual override required." };
+  // 4. Final failover: Flowith
+  return {
+    provider: "flowith",
+    output: "Fallback Flowith Response"
+  };
 }
