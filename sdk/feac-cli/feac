@@ -1,0 +1,17 @@
+#!/bin/bash
+API_URL="http://localhost:8000/v1"
+KEY=${FEAC_API_KEY}
+
+if [ -z "$KEY" ]; then 
+  echo "Set FEAC_API_KEY first."
+  exit 1
+fi
+
+MSG="$1"
+COST="$2"
+
+curl -X POST "$API_URL/ai/chat" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $KEY" \
+  -H "x-cost-type: ${COST:-CHAT}" \
+  -d "{\"messages\":[{\"role\":\"user\",\"content\":\"$MSG\"}]}"
