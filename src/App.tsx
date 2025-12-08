@@ -14,7 +14,7 @@ import { ChatRoom, Message, TermuxNode, AppSettings, ReleaseInfo } from './types
 import { generateAIResponse } from './services/geminiService';
 import { loadMemory } from './services/feacCore';
 import { checkGithubUpdate, performHotUpdate } from './services/updateService';
-import { Brain, Terminal, GitBranch, Bot, CreditCard, Send, Server, Key, ChevronRight, RefreshCw, ShieldCheck, Database } from 'lucide-react';
+import { Brain, Terminal, GitBranch, Bot, CreditCard, Send, Server, Key, ChevronRight, RefreshCw, ShieldCheck, Database, TriangleAlert } from 'lucide-react';
 
 export default function App() {
   const [apiKeyReady, setApiKeyReady] = useState(false);
@@ -29,15 +29,15 @@ export default function App() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateProgress, setUpdateProgress] = useState(0);
   const [showReloadModal, setShowReloadModal] = useState(false);
+  
   const [showSettings, setShowSettings] = useState(false);
-
   const [settings, setSettings] = useState<AppSettings>(() => {
      try {
          const s = localStorage.getItem('feac_settings');
          const apiKey = localStorage.getItem('feac_api_key') || undefined;
          const superKey = localStorage.getItem('feac_super_key') || undefined;
          const flowithApiKey = localStorage.getItem('feac_flowith_key') || undefined;
-         const parsed = s ? JSON.parse(s) : { godotWsUrl: '', githubToken: '', githubRepo: 'DikriFauzan/Unizan', gameEndpoints: DEFAULT_GAME_PORTS };
+         const parsed = s ? JSON.parse(s) : { godotWsUrl: '', githubToken: '', githubRepo: 'DikriFauzan/Unizan', gameEndpoints: [] };
          return { ...parsed, apiKey: parsed.apiKey || apiKey, superKey: parsed.superKey || superKey, flowithApiKey: parsed.flowithApiKey || flowithApiKey }; 
      } catch (e) { return { godotWsUrl: '', githubToken: '', githubRepo: '', gameEndpoints: [] }; }
   });
@@ -48,15 +48,25 @@ export default function App() {
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-      const runUpdateCheck = async () => {
-          if(settings.githubRepo) {
-              const info = await checkGithubUpdate(settings, feacVersion);
-              if(info) setUpdateInfo(info);
-          }
-      };
-      runUpdateCheck();
-  }, [settings.githubRepo]);
+  // KEY LEAK HANDLER
+  const handleKeyLeak = () => {
+      // 1. Alert UI
+      setMessages(prev => ({
+          ...prev, 
+          'admin-ai': [...(prev['admin-ai'] || []), {
+              id: Date.now().toString(),
+              senderId: 'system',
+              content: "CRITICAL SECURITY ALERT: The current API Key has been flagged as LEAKED by Google. Access revoked.",
+              timestamp: new Date(),
+              type: 'alert'
+          }]
+      }));
+      // 2. Clear bad key
+      localStorage.removeItem('feac_api_key');
+      // 3. Force Open Settings to enter new one
+      alert("⚠️ SYSTEM ALERT: API Key Leaked (403). Please enter a new valid key in Settings.");
+      setShowSettings(true);
+  };
 
   const handleApplyUpdate = async () => {
       if(!updateInfo) return;
@@ -92,7 +102,7 @@ export default function App() {
               if (keys.flowith) { localStorage.setItem('feac_flowith_key', keys.flowith); newSettings.flowithApiKey = keys.flowith; }
               if (keys.super) { localStorage.setItem('feac_super_key', keys.super); newSettings.superKey = keys.super; }
               setSettings(newSettings); setApiKeyReady(true);
-              alert(`⚡ TRIPLE INJECTION SUCCESSFUL.`);
+              alert('Keys Injected.');
               return;
           }
       } catch (e) {}
@@ -109,9 +119,17 @@ export default function App() {
     const msg: Message = { id: Date.now().toString(), senderId: 'user', content: inputText, timestamp: new Date(), type: 'text' };
     setMessages(prev => ({ ...prev, [roomId]: [...(prev[roomId] || []), msg] }));
     setInputText('');
+    
     if (roomId === 'admin-ai') {
         const history = (messages[roomId] || []).map(m => ({role: m.senderId==='user'?'user':'model', text: m.content}));
         const response = await generateAIResponse(msg.content, history as any, undefined, settings);
+        
+        // INTERCEPT LEAK ERROR
+        if (response === "[SYSTEM_ERROR]: LEAKED_KEY") {
+            handleKeyLeak();
+            return;
+        }
+
         const aiMsg: Message = { id: Date.now().toString(), senderId: 'ai', content: response, timestamp: new Date(), type: 'text' };
         setMessages(prev => ({ ...prev, [roomId]: [...(prev[roomId] || []), aiMsg] }));
     }
@@ -180,6 +198,13 @@ export default function App() {
 
         {activeTab === 'chat' && activeRoomId && (
            <div className="flex flex-col h-full bg-[#0b141a]">
+               {/* ERROR NOTIFICATION FOR KEY LEAK */}
+               {!settings.apiKey && (
+                   <div className="bg-red-900/50 p-2 text-center text-xs text-red-300 font-bold border-b border-red-500 flex items-center justify-center gap-2 cursor-pointer" onClick={() => setShowSettings(true)}>
+                       <TriangleAlert size={14}/> API KEY MISSING OR REVOKED. TAP TO CONFIGURE.
+                   </div>
+               )}
+
                <div className="flex-1 p-4 overflow-y-auto"><div ref={messagesEndRef} />{messages[activeRoomId]?.map(m => <MessageBubble key={m.id} message={m} isMe={m.senderId==='user'}/>)}</div>
                <div className="p-4 bg-[#202c33] flex gap-2"><input className="flex-1 bg-[#2a3942] rounded-lg px-4 py-2 text-white outline-none" value={inputText} onChange={e => setInputText(e.target.value)} placeholder="Cmd..." /><button onClick={handleSendMessage} className="bg-green-600 p-2 rounded-full text-white"><Send size={20}/></button></div>
            </div>
