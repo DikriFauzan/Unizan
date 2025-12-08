@@ -1,23 +1,33 @@
 import { AppSettings } from '../types';
 
-// Trigger Workflow
-export const triggerWorkflow = async (settings: AppSettings, workflowFileName: string, inputs: { build_target: string, build_mode: string }) => {
-    if (!settings.githubToken || !settings.githubRepo) throw new Error("GitHub Config Missing");
-    const url = `https://api.github.com/repos/${settings.githubRepo}/actions/workflows/${workflowFileName}/dispatches`;
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-            Authorization: `token ${settings.githubToken}`,
-            Accept: "application/vnd.github.v3+json",
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ ref: 'main', inputs: inputs })
-    });
-    if (!res.ok) throw new Error("Workflow Trigger Failed");
-    return true;
+export interface GithubFile {
+    name: string;
+    path: string;
+    type: 'file' | 'dir';
+    sha: string;
+}
+
+export const fetchRepoTree = async (settings: AppSettings, path: string = ''): Promise<GithubFile[]> => {
+    if (!settings.githubToken || !settings.githubRepo) return [];
+    try {
+        const url = `https://api.github.com/repos/${settings.githubRepo}/contents/${path}`;
+        const res = await fetch(url, { headers: { Authorization: `token ${settings.githubToken}` } });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data) ? data.map((item: any) => ({ name: item.name, path: item.path, type: item.type, sha: item.sha })) : [];
+    } catch(e) { return []; }
 };
 
-// Commit File
+export const fetchFileContent = async (settings: AppSettings, path: string): Promise<string> => {
+     if (!settings.githubToken || !settings.githubRepo) return "";
+     try {
+        const url = `https://api.github.com/repos/${settings.githubRepo}/contents/${path}`;
+        const res = await fetch(url, { headers: { Authorization: `token ${settings.githubToken}` } });
+        const data = await res.json();
+        return decodeURIComponent(escape(atob(data.content)));
+    } catch (e) { return ""; }
+};
+
 export const commitFileToGithub = async (settings: AppSettings, filePath: string, content: string, message: string) => {
     if (!settings.githubToken || !settings.githubRepo) throw new Error("Config Missing");
     const baseUrl = `https://api.github.com/repos/${settings.githubRepo}/contents/${filePath}`;
@@ -37,43 +47,18 @@ export const commitFileToGithub = async (settings: AppSettings, filePath: string
     return await res.json();
 };
 
-// --- NEW: REAL REPO SCANNING ---
-export interface GithubFile {
-    name: string;
-    path: string;
-    type: 'file' | 'dir';
-    sha: string;
-}
-
-export const fetchRepoTree = async (settings: AppSettings, path: string = ''): Promise<GithubFile[]> => {
-    if (!settings.githubToken || !settings.githubRepo) return [];
-    try {
-        const url = `https://api.github.com/repos/${settings.githubRepo}/contents/${path}`;
-        const res = await fetch(url, {
-            headers: { Authorization: `token ${settings.githubToken}` }
-        });
-        if (!res.ok) return [];
-        const data = await res.json();
-        return Array.isArray(data) ? data.map((item: any) => ({
-            name: item.name,
-            path: item.path,
-            type: item.type,
-            sha: item.sha
-        })) : [];
-    } catch(e) {
-        console.error("Fetch Tree Error", e);
-        return [];
-    }
-};
-
-export const fetchFileContent = async (settings: AppSettings, path: string): Promise<string> => {
-     if (!settings.githubToken || !settings.githubRepo) return "";
-     try {
-        const url = `https://api.github.com/repos/${settings.githubRepo}/contents/${path}`;
-        const res = await fetch(url, { headers: { Authorization: `token ${settings.githubToken}` } });
-        const data = await res.json();
-        return decodeURIComponent(escape(atob(data.content)));
-    } catch (e) {
-        return "";
-    }
+export const triggerWorkflow = async (settings: AppSettings, workflowFileName: string, inputs: { build_target: string, build_mode: string }) => {
+    if (!settings.githubToken || !settings.githubRepo) throw new Error("GitHub Config Missing");
+    const url = `https://api.github.com/repos/${settings.githubRepo}/actions/workflows/${workflowFileName}/dispatches`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            Authorization: `token ${settings.githubToken}`,
+            Accept: "application/vnd.github.v3+json",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ ref: 'main', inputs: inputs })
+    });
+    if (!res.ok) throw new Error("Workflow Trigger Failed");
+    return true;
 };
