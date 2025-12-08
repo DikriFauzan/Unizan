@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String?  @unique
+  role      String   @default("user") // owner, user
+  tier      String   @default("free") // free, pro, ultra
+  quota     Int      @default(2000)
+  used      Int      @default(0)
+  apiKeys   ApiKey[]
+  keystore  Keystore?
+  releases  Release[]
+  createdAt DateTime @default(now())
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  isActive  Boolean  @default(true)
+  lastUsed  DateTime @default(now())
+}
+
+model Release {
+  id          String   @id @default(uuid())
+  userId      String
+  projectName String
+  gitUrl      String
+  version     String
+  branch      String
+  artifactUrl String?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Keystore {
+  id        String   @id @default(uuid())
+  userId    String
+  alias     String
+  base64    String   // Encrypted base64 keystore (owner unlimited, user limited)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}

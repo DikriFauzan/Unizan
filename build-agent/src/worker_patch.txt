@@ -1,0 +1,12 @@
+// PATCH NOTE: Insert after artifact is built (non-signed)
+const { signApk } = require("./signing/signer");
+const versionTool = require("./utils/version");
+const versionStamp = versionTool.timestamp();
+
+const signedPath = await signApk(artifactPath, keystore, keystore ? keystore.alias : null);
+
+// Artifact naming
+const finalName = `${payload.projectName || "feac"}_${payload.branch || "main"}_${versionStamp}.apk`;
+const finalPath = `/artifacts/${finalName}`;
+fs.copyFileSync(signedPath, finalPath);
+// Upload finalPath instead of artifactPath
