@@ -53,3 +53,11 @@ services:
       - redis
     environment:
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+
+  ai_router:
+    build: ./ai_router
+    ports:
+      - "9004:9004"
+    depends_on:
+      - billing
+      - emergent
