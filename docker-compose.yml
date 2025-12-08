@@ -61,3 +61,11 @@ services:
     depends_on:
       - billing
       - emergent
+
+  rights:
+    build: ./rights
+    ports:
+      - "9004:9004"
+    depends_on:
+      - redis
+
