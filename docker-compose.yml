@@ -37,3 +37,10 @@ services:
     ports:
       - "9000:9000"
       - "9001:9002"
+
+  flowith:
+    build: ./flowith
+    ports:
+      - "9002:9002"
+    volumes:
+      - ./flowith:/flowith
