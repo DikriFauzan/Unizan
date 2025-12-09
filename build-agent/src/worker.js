@@ -1,3 +1,4 @@
+const { emitLog } = require('./logger/emit');
 /**
  * FEAC Build Agent - Worker
  * - Listens to "build-jobs" BullMQ queue
