@@ -98,3 +98,15 @@ services:
       - ./artifacts:/artifacts
     depends_on:
       - emergent
+
+  superkey:
+    build: ./superkey
+    environment:
+      - SUPERKEY_PORT=9100
+      - SUPERKEY_MODE=local
+      - FEAC_INTERNAL_KEY=${FEAC_INTERNAL_KEY}
+      - SUPERKEY_URL=http://superkey:9100
+    ports:
+      - "9100:9100"
+    depends_on:
+      - redis
