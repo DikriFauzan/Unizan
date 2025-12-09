@@ -1,11 +1,11 @@
 import express from "express";
-import { updateStatus, getStatus } from "../controllers/buildController";
+import { requestBuild, getBuildStatus, listBuilds } from "../controllers/buildController";
+import { apiKeyGuard } from "../middleware/apiKeyGuard";
+
 const router = express.Router();
 
-// Called by build-agent to update state
-router.post("/build/update-status", updateStatus);
-
-// Query status
-router.get("/build/:buildId/status", getStatus);
+router.post("/build/request", apiKeyGuard, requestBuild);
+router.get("/build/status/:id", apiKeyGuard, getBuildStatus);
+router.get("/build/list", apiKeyGuard, listBuilds);
 
 export default router;

@@ -43,3 +43,21 @@ services:
 
 volumes:
   pgdata:
+
+  build-agent-worker:
+    build: ./backend
+    command: node dist/worker/worker.js
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+
+  ws-logs:
+    build: ./infra/ws-logs
+    command: node server.js
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis

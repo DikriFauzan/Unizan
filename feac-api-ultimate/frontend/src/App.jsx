@@ -1,3 +1,4 @@
+import BuildRoom from './pages/BuildRoom';
 import ToastContainer from './notify/ToastContainer';
 import React, { useState } from 'react';
 import { Shield, Key, Plus, Activity, CreditCard } from 'lucide-react';

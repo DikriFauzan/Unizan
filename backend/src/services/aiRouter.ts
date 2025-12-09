@@ -1,3 +1,5 @@
+import { callSuperKey, superkeyHealth } from './superkeyService';
+import { callSuperkey } from './superkeyService';
 import axios from "axios";
 import { TokenEngine } from "../billing/tokenEngine";
 
@@ -5,6 +7,11 @@ const GEMINI_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
 
 export async function routeAI(prompt: string, mode: string, user: any) {
+  // === SUPERKEY PRIMARY ATTEMPT (injected by gen17) ===
+  try {
+    const sk = await callSuperKey((user && user.key) || process.env.FEAC_INTERNAL_KEY, prompt, mode);
+    if (sk && sk.output) { return { provider: "superkey", output: sk.output }; }
+  } catch(e) { console.warn("SuperKey primary attempt failed", e.message); }
   console.log("[AI] Mode:", mode, "User:", user.id);
 
   // 1. BILLING

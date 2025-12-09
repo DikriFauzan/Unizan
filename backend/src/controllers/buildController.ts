@@ -1,42 +1,25 @@
 import { Request, Response } from "express";
-import { createOrUpdateBuild, getBuild } from "../services/buildService";
-import { emitBuildEvent } from "../ws/socket";
+import { createBuildJob, getJob, listJobs } from "../services/buildService";
 
-export const updateStatus = async (req: Request, res: Response) => {
+export const requestBuild = async (req: Request, res: Response) => {
   try {
-    const body = req.body;
-    if (!body.buildId) return res.status(400).json({ error: "buildId required" });
-
-    const b = await createOrUpdateBuild({
-      buildId: body.buildId,
-      userId: body.userId,
-      project: body.project,
-      branch: body.branch,
-      status: body.status,
-      artifact: body.artifact,
-      logs: body.logs
-    });
-
-    // Emit realtime event
-    emitBuildEvent(body.buildId, {
-      buildId: b.buildId,
-      status: b.status,
-      artifact: b.artifact,
-      logs: b.logs,
-      updatedAt: b.updatedAt
-    });
-
-    return res.json({ ok: true, build: b });
-  } catch (e: any) {
-    console.error("updateStatus error:", e);
-    return res.status(500).json({ error: e.message });
-  }
+    const user = (req as any).user;
+    const { projectName, repoUrl, branch, type, isAuto } = req.body;
+    const job = await createBuildJob({ userId: user.id, projectName, repoUrl, branch, type, isAuto });
+    res.json({ job });
+  } catch (e:any) { res.status(500).json({ error: e.message }); }
 };
 
-export const getStatus = async (req: Request, res: Response) => {
-  const buildId = req.params.buildId;
-  if (!buildId) return res.status(400).json({ error: "buildId required" });
-  const b = await getBuild(buildId);
-  if (!b) return res.status(404).json({ error: "not found" });
-  res.json({ build: b });
+export const getBuildStatus = async (req: Request, res: Response) => {
+  try {
+    const job = await getJob(req.params.id);
+    res.json(job);
+  } catch (e:any) { res.status(500).json({ error: e.message }); }
+};
+
+export const listBuilds = async (_req: Request, res: Response) => {
+  try {
+    const jobs = await listJobs();
+    res.json({ jobs });
+  } catch (e:any) { res.status(500).json({ error: e.message }); }
 };

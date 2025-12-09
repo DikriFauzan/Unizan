@@ -110,3 +110,16 @@ services:
       - "9100:9100"
     depends_on:
       - redis
+
+  metrics-exporter:
+    build: ./metrics-exporter
+    environment:
+      - BACKEND_URL=http://feac-api:8000
+      - SUPERKEY_URL=http://superkey:9100
+      - EMERGENT_URL=http://emergent:9001
+    ports:
+      - "9200:9200"
+    depends_on:
+      - feac-api
+      - superkey
+      - emergent
