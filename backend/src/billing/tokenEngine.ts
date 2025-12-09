@@ -1,19 +1,38 @@
+/**
+ * backend/src/billing/tokenEngine.ts
+ * Token cost mapping and basic charge stubs.
+ */
+import { createClient } from 'redis';
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+const redis = createClient({ url: redisUrl });
+redis.connect().catch(()=>{});
+
 export const TOKEN_COST = {
   CHAT: 1,
-  SHORT: 2,
-  MEDIUM: 5,
-  LONG: 10,
-  CODEGEN: 10,      // adjustable up to 50 in controller
-  IMAGE: 50,
-  VIDEO: 100,
-  BUILD: 1000
+  SHORT_REASONING: 2,
+  MEDIUM_REASONING: 5,
+  LONG_REASONING: 10,
+  CODE_UNIT_MIN: 10,
+  CODE_UNIT_MAX: 50,
+  BUILD_APK_BASE: 2000
 };
 
 export class TokenEngine {
-  static async bill(user: any, type: keyof typeof TOKEN_COST, custom=0) {
-    if (user.bypass) return true;
-    const cost = custom > 0 ? custom : TOKEN_COST[type];
-    console.log(`[BILLING] User ${user.id} charged ${cost} tokens for ${type}`);
+  static async charge(userId: string, amount: number, isOwner = false) {
+    if (isOwner) return true;
+    const key = `user:${userId}:quota`;
+    // Initialize if not exist
+    const cur = parseInt((await redis.get(key)) || "0");
+    // For simplicity: store used count; real system should store remaining credits
+    await redis.incrby(key, amount);
+    // Example limit handling (free tier 2000)
+    const limit = 2000;
+    const used = parseInt((await redis.get(key)) || "0");
+    if (used > limit) return false;
     return true;
+  }
+
+  static async getUsed(userId: string) {
+    return parseInt((await redis.get(`user:${userId}:quota`)) || "0");
   }
 }

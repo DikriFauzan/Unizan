@@ -87,3 +87,14 @@ services:
     depends_on:
       - redis
       - minio
+
+  superkey:
+    build: ./superkey
+    ports:
+      - "9100:9100"
+    environment:
+      - EMERGENT_URL=${EMERGENT_URL:-http://emergent:9001/solve}
+    volumes:
+      - ./artifacts:/artifacts
+    depends_on:
+      - emergent
