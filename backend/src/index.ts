@@ -1,3 +1,4 @@
+import rerankRoute from './routes/rerankRoute';
 import openaiRoute from './routes/openaiRoute';
 import { apiKeyGuardOptional } from './middleware/apiKeyGuardOptional';
 import ariesRoute from './routes/ariesRoute';
@@ -21,6 +22,7 @@ import aiRoutes from "./routes/aiRoutes";
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/v1', rerankRoute);
 app.use('/v1', openaiRoute);
 app.use('/v1', ariesRoute);
 app.use('/v1', generateRoute);

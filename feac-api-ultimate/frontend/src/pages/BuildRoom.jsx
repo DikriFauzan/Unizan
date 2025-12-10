@@ -1,3 +1,4 @@
+import RAGHitsPanel from '../components/rag/RAGHitsPanel';
 import React, { useEffect, useState } from "react";
 import { connectBuildWS, onBuildEvent, disconnectBuildWS } from "../ws/buildWsClient";
 import api from "../api/client";
