@@ -1,3 +1,4 @@
+import openaiRoute from './routes/openaiRoute';
 import { apiKeyGuardOptional } from './middleware/apiKeyGuardOptional';
 import ariesRoute from './routes/ariesRoute';
 import generateRoute from './routes/generateRoute';
@@ -20,6 +21,7 @@ import aiRoutes from "./routes/aiRoutes";
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/v1', openaiRoute);
 app.use('/v1', ariesRoute);
 app.use('/v1', generateRoute);
 app.use('/v1', ragRoute);
