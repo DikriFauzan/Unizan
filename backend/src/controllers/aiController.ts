@@ -1,11 +1,25 @@
-import { routeAI } from "../services/aiRouter";
+import { Request, Response } from "express";
+import { hybridGenerate, providerScores } from "../services/hybridRouter";
+import { billTokens } from "../services/billingEngine";
 
-export async function chat(req: any, res: any) {
+export async function aiGenerate(req: Request, res: Response) {
+  const { prompt } = req.body;
+  const apiKey = req.headers["x-api-key"] as string | undefined;
+
+  if (!prompt) return res.status(400).json({ error: "prompt required" });
+
   try {
-    const msg = req.body.messages.at(-1).content;
-    const out = await routeAI(msg, "chat", req.user);
-    res.json(out);
+    const result = await hybridGenerate(prompt, apiKey);
+    await billTokens(apiKey, result.usage);
+
+    return res.json({
+      ok: true,
+      provider: result.provider,
+      latency: result.latency,
+      scores: providerScores(),
+      text: result.text
+    });
   } catch (e: any) {
-    res.status(500).json({ error: e.message });
+    return res.status(500).json({ error: e.message });
   }
 }
