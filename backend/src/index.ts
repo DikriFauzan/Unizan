@@ -1,3 +1,4 @@
+import generateRoute from './routes/generateRoute';
 import ragRoute from './routes/ragRoute';
 import emerAdminRoute from './routes/emerAdminRoute';
 import emerRoute from './routes/emerRoute';
@@ -17,6 +18,7 @@ import aiRoutes from "./routes/aiRoutes";
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/v1', generateRoute);
 app.use('/v1', ragRoute);
 app.use('/v1', emerRoute);
 app.use('/v1', emerAdminRoute);
