@@ -1,3 +1,4 @@
+import RagPlannerAdmin from './admin/RagPlannerAdmin';
 import AriesEmergentAdmin from './admin/AriesEmergentAdmin';
 import SuperKeyAdmin from './admin/SuperKeyAdmin';
 import AdminBilling from './admin/AdminBilling';
@@ -11,6 +12,7 @@ export default function App() {
             <Routes>
             <Route path="/login" element={<Login/>} /><Route path="/register" element={<Register/>} /><Route path="/admin/billing" element={<AdminBilling/>} />  <Route path="/admin/superkey" element={<SuperKeyAdmin/>} />
   <Route path="/admin/emer" element={<AriesEmergentAdmin/>} />
+  <Route path="/admin/rag" element={<RagPlannerAdmin/>} />
 </Routes>
         </Router>
     );
