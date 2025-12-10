@@ -1,3 +1,4 @@
+import AriesEmergentAdmin from './admin/AriesEmergentAdmin';
 import SuperKeyAdmin from './admin/SuperKeyAdmin';
 import AdminBilling from './admin/AdminBilling';
 import { AuthProvider } from './context/AuthContext';
@@ -9,6 +10,7 @@ export default function App() {
         <Router>
             <Routes>
             <Route path="/login" element={<Login/>} /><Route path="/register" element={<Register/>} /><Route path="/admin/billing" element={<AdminBilling/>} />  <Route path="/admin/superkey" element={<SuperKeyAdmin/>} />
+  <Route path="/admin/emer" element={<AriesEmergentAdmin/>} />
 </Routes>
         </Router>
     );
