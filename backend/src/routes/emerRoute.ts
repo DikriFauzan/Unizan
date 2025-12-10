@@ -14,7 +14,7 @@ router.post("/emer/plan", apiKeyGuard, async (req, res) => {
   res.json({ plan });
 });
 
-// Worker posts emergent result (executor)
+// Worker posts emergent result (executor: any)
 router.post("/internal/emer/result", async (req, res) => {
   const { jobId, stepId, output } = req.body;
   const sc = scoreOutput(output || "");

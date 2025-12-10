@@ -15,7 +15,7 @@ export function inc(name: string, v = 1) {
 export function getMetricsText(): string {
   // Prometheus plain text exposition format
   let out = '';
-  for (const k of Object.keys(counters)) {
+  for (const k of Object.keys(counters: any)) {
     out += `# TYPE ${k} counter\n${k} ${counters[k]}\n`;
   }
   return out;

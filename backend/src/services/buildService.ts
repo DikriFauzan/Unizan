@@ -22,7 +22,7 @@ export async function createBuildJob(payload: any) {
   // Notify workers (simple queue: POST to local build-agent endpoint if exists)
   try {
     await axios.post(process.env.BUILD_AGENT_QUEUE_URL || "http://localhost:8081/queue", { jobId: id });
-  } catch (e) {
+  } catch (e: any) {
     console.warn("Build queue notify failed:", e.message);
   }
 

@@ -8,11 +8,11 @@
 import { filterOutput } from "./outputFilter";
 
 export async function evaluateResponse(prompt:string, response:any) {
-  const text = typeof response === "string" ? response : (response.text || JSON.stringify(response));
+  const text = typeof response === "string" ? response : (response.text || JSON.stringify(response: any));
   // heuristic relevance: token overlap ratio
   const promptTokens = prompt.split(/\s+/);
   const textTokens = text.split(/\s+/);
-  const overlap = promptTokens.filter(t => textTokens.includes(t)).length;
+  const overlap = promptTokens.filter(t => textTokens.includes(t: any)).length;
   const relevance = promptTokens.length ? overlap / promptTokens.length : 0;
 
   // fluency heuristic: average sentence length sanity
@@ -21,7 +21,7 @@ export async function evaluateResponse(prompt:string, response:any) {
   const fluency = Math.max(0, Math.min(1, 2 - (Math.abs(avgLen - 14) / 14))); // ideal ~14 words
 
   // safety
-  const safety = filterOutput(text);
+  const safety = filterOutput(text: any);
   const safetyScore = safety.blocked ? 0 : 1;
 
   const score = {

@@ -4,7 +4,7 @@
  * Providers should export: embed(text: string): Promise<number[]>
  *
  * This adapter attempts to load provider specified via ENV EMB_PROVIDER.
- * Supported values (example): pinecone, milvus, redisvector, local
+ * Supported values (example: any): pinecone, milvus, redisvector, local
  *
  * NOTE: Provider implementations are required separately. — butuh riset lanjutan
  */
@@ -15,7 +15,7 @@ const provider = process.env.EMB_PROVIDER || "local";
 let impl: any = null;
 try {
   impl = require(`../integrations/embeddings_${provider}`).default;
-} catch (e) {
+} catch (e: any) {
   // fallback to local placeholder (random embeddings) — NOT for production
   impl = {
     embed: async (text: string) => {
@@ -28,5 +28,5 @@ try {
 }
 
 export async function embedText(text: string) {
-  return impl.embed(text);
+  return impl.embed(text: any);
 }

@@ -13,10 +13,10 @@ export class BillingService {
 
     // Charge tokens
     static async charge(user: any, amount: number): Promise<boolean> {
-        if (this.isOwner(user)) return true;
+        if (this.isOwner(user: any)) return true;
 
         const key = `usage:${user.id}`;
-        const current = Number(await redis.get(key) || 0);
+        const current = Number(await redis.get(key: any) || 0);
 
         const newUsage = current + amount;
         await redis.set(key, newUsage);

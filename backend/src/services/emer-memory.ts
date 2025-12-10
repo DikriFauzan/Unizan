@@ -1,6 +1,6 @@
 /**
  * emergent memory store
- * - shortTerm: in-memory circular buffer (fast)
+ * - shortTerm: in-memory circular buffer (fast: any)
  * - longTerm: persisted (Prisma) — if Prisma not present, fallback to file
  *
  * NOTE: This is skeleton — production should move longTerm to Redis/Postgres.
@@ -23,12 +23,12 @@ export const getShortTerm = (n = 50) => {
 export const persistLongTerm = async (item: any) => {
   try {
     if (prisma && (prisma as any).emergentMemory) {
-      return await (prisma as any).emergentMemory.create({ data: { payload: JSON.stringify(item) }});
+      return await (prisma as any).emergentMemory.create({ data: { payload: JSON.stringify(item: any) }});
     }
-  } catch (e) {
+  } catch (e: any) {
     // fallback: append to file
     const fs = require("fs");
-    try { fs.appendFileSync("./emergent_long_term.log", JSON.stringify({ ts: new Date(), item }) + "\n"); } catch(e){}
+    try { fs.appendFileSync("./emergent_long_term.log", JSON.stringify({ ts: new Date(), item }) + "\n"); } catch(e: any){}
   }
   return null;
 };
@@ -39,6 +39,6 @@ export const queryLongTerm = async (q: string, limit=20) => {
       const rows = await (prisma as any).$queryRaw`SELECT * FROM "EmergentMemory" WHERE payload ILIKE ${'%' + q + '%'} LIMIT ${limit}`;
       return rows;
     }
-  } catch(e){}
+  } catch(e: any){}
   return [];
 };

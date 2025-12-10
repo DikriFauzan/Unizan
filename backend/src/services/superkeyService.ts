@@ -15,7 +15,7 @@ export async function callSuperKey(key: string | undefined, prompt: string, mode
     });
     if (!res.ok) throw new Error(`SuperKey HTTP ${res.status}`);
     return await res.json();
-  } catch (e) {
+  } catch (e: any) {
     console.warn("SuperKey call failed:", e.message);
     return null;
   }
@@ -26,7 +26,7 @@ export async function superkeyHealth() {
     const res = await fetch(`${SUPERKEY_URL}/health`);
     if (!res.ok) return null;
     return await res.json();
-  } catch (e) {
+  } catch (e: any) {
     return null;
   }
 }

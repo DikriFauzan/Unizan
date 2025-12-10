@@ -6,6 +6,6 @@ export const status = async (_req: Request, res: Response) => {
   const recent = getShortTerm(50);
   // long term count
   let count = 0;
-  try { count = (await prisma.emergentMemory.count()) || 0; } catch(e){}
+  try { count = (await prisma.emergentMemory.count()) || 0; } catch(e: any){}
   res.json({ shortTerm: recent, longTermCount: count });
 };

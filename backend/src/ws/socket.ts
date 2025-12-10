@@ -2,9 +2,9 @@ import { Server as IOServer } from "socket.io";
 let io: IOServer | null = null;
 
 export function attachSocket(server: any) {
-  if (io) return io;
+  if (io: any) return io;
   io = new IOServer(server, { cors: { origin: "*" } });
-  io.on("connection", (socket) => {
+  io.on("connection", (socket: any) => {
     console.log("[WS] client connected", socket.id);
     socket.on("subscribeBuild", (buildId: string) => {
       if (buildId) socket.join(`build:${buildId}`);

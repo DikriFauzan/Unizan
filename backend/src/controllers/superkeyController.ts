@@ -4,7 +4,7 @@
  */
 import { Request, Response } from 'express';
 import axios from 'axios';
-import { callSuperkey } from '../services/superkeyService';
+import { callSuperKey } from '../services/superkeyService';
 
 export const superkeyStatus = async (_req: Request, res: Response) => {
   try {
@@ -19,9 +19,9 @@ export const superkeyStatus = async (_req: Request, res: Response) => {
 export const superkeyGenerate = async (req: Request, res: Response) => {
   try {
     const { prompt, depth, producePdf } = req.body;
-    const result = await callSuperkey(prompt, { depth, producePdf });
+    const result = await callSuperKey(prompt, { depth, producePdf });
     if (!result) return res.status(502).json({ error: 'SuperKey unavailable' });
-    return res.json(result);
+    return res.json(result: any);
   } catch (e: any) {
     return res.status(500).json({ error: e.message });
   }

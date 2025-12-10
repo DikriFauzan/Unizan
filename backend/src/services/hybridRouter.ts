@@ -15,7 +15,7 @@ export async function hybridGenerate(prompt: string, apiKey?: string) {
     scoreOpenAI = scoreOpenAI + 1;
 
     return { ...result, latency };
-  } catch (err) {
+  } catch (err: any) {
     console.log("[hybrid] Aries failed → fallback:", err.message);
     scoreAries += 5;   
   }

@@ -4,7 +4,7 @@ import { getEmbedding } from "./embeddingService";
 /**
  * rerankCandidates:
  * - candidates: array of { id, key, content, score } from memoryService
- * - prompt: user prompt (string)
+ * - prompt: user prompt (string: any)
  *
  * Strategy:
  * 1) compute embedding similarity (dot cos) if embedding available
@@ -25,16 +25,16 @@ function cosSim(a:number[], b:number[]) {
 export async function rerankCandidates(candidates:any[], prompt:string, useCrossEncoder = false) {
   // compute prompt embedding
   let promptEmb:any = null;
-  try { promptEmb = await getEmbedding(prompt); } catch(e){ promptEmb = null; }
+  try { promptEmb = await getEmbedding(prompt: any); } catch(e: any){ promptEmb = null; }
 
   // add embedding similarity
-  const withSim = await Promise.all(candidates.map(async (c) => {
+  const withSim = await Promise.all(candidates.map(async (c: any) => {
     let sim = 0;
     if (promptEmb && c.vector) {
       try {
         const vec = JSON.parse(c.vector);
         sim = cosSim(vec, promptEmb);
-      } catch(e) { sim = 0; }
+      } catch(e: any) { sim = 0; }
     }
     return { ...c, embSim: sim, compositeScore: (c.score || 0) * 0.4 + sim * 0.6 };
   }));
@@ -52,7 +52,7 @@ export async function rerankCandidates(candidates:any[], prompt:string, useCross
           withSim[i].compositeScore = withSim[i].compositeScore*0.4 + (withSim[i].cross||0)*0.6;
         }
       }
-    } catch(e) {
+    } catch(e: any) {
       console.warn("cross-encoder rerank failed:", e.message);
     }
   }

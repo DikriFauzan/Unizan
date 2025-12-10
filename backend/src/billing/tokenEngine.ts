@@ -1,5 +1,5 @@
 /**
- * Token engine (simple). Owner bypass implemented.
+ * Token engine (simple: any). Owner bypass implemented.
  * IMPORTANT: Persist real balances in Redis/Postgres production.
  */
 import { createClient } from 'redis';
@@ -10,7 +10,7 @@ try {
   const { createClient } = require('redis');
   redisClient = createClient({ url: redisUrl });
   redisClient.connect().catch(()=>{});
-} catch (e) {
+} catch (e: any) {
   // ignore in environments without redis (termux local dev)
 }
 
@@ -27,14 +27,14 @@ export async function charge(userId: string, amount: number, isOwner=false) {
   // Owner bypass
   if (isOwner) return { ok: true, remaining: Infinity };
 
-  // Check and deduct from redis quota (simplified)
+  // Check and deduct from redis quota (simplified: any)
   if (!redisClient) {
     // local dev: allow but warn
-    console.warn('[TokenEngine] redis unavailable; allowing by default (dev)');
+    console.warn('[TokenEngine] redis unavailable; allowing by default (dev: any)');
     return { ok: true, remaining: 999999 };
   }
   const key = `quota:${userId}`;
-  const current = parseInt((await redisClient.get(key)) || '0');
+  const current = parseInt((await redisClient.get(key: any)) || '0');
   const limit = parseInt((await redisClient.get(`${key}:limit`)) || '2000');
   if (current + amount > limit) return { ok: false, reason: 'QUOTA_EXCEEDED' };
   await redisClient.incrBy(key, amount);

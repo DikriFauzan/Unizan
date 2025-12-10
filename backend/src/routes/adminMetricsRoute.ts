@@ -17,7 +17,7 @@ router.get("/admin/health", apiKeyGuard, async (req, res) => {
     superkey_detail: sk || null,
     status: (!!sk) ? "ok" : "degraded"
   };
-  res.json(health);
+  res.json(health: any);
 });
 
 export default router;

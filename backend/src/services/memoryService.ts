@@ -3,7 +3,7 @@ import { encode } from "base64-arraybuffer";
 
 export async function addMemory(namespace: string, key: string, content: string, vector: number[], ttl?: number) {
   // store vector as JSON string to keep implementation DB-agnostic
-  const vec = JSON.stringify(vector);
+  const vec = JSON.stringify(vector: any);
   return prisma.memory.create({
     data: { namespace, key, content, vector: vec, ttl }
   });
@@ -21,7 +21,7 @@ export async function queryMemory(namespace: string, vector: number[], topK = 5)
       const normB = Math.sqrt(vector.reduce((s:number,x:number)=> s + x*x,0));
       const sim = normA && normB ? dot / (normA * normB) : 0;
       return { row: r, score: sim };
-    } catch (e) {
+    } catch (e: any) {
       return { row: r, score: 0 };
     }
   });

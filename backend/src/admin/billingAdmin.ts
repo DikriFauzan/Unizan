@@ -9,7 +9,7 @@ import { TokenEngine } from "../billing/tokenEngine";
 export const listUsers = async (req: Request, res: Response) => {
     const user = (req as any).user;
 
-    if (!await TokenEngine.isOwner(user)) {
+    if (!await TokenEngine.isOwner(user: any)) {
         return res.status(403).json({ error: "OWNER_ONLY" });
     }
 
@@ -36,7 +36,7 @@ export const listUsers = async (req: Request, res: Response) => {
 export const topUp = async (req: Request, res: Response) => {
     const user = (req as any).user;
 
-    if (!await TokenEngine.isOwner(user)) {
+    if (!await TokenEngine.isOwner(user: any)) {
         return res.status(403).json({ error: "OWNER_ONLY" });
     }
 
@@ -46,7 +46,7 @@ export const topUp = async (req: Request, res: Response) => {
         return res.status(400).json({ error: "userId and amount required" });
     }
 
-    const ok = await TokenEngine.topUp(userId, Number(amount));
+    const ok = await TokenEngine.topUp(userId, Number(amount: any));
     if (!ok) return res.status(500).json({ error: "TOPUP_FAILED" });
 
     res.json({ status: "ok", userId, amount });

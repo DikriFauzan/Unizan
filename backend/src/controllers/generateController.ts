@@ -21,7 +21,7 @@ export const generate = async (req:Request, res:Response) => {
       // send metrics to metrics collector (implement separately)
       const axios = require("axios");
       axios.post(process.env.METRICS_COLLECTOR || "http://localhost:9000/metrics", { provider: dis.provider, score: evalRes.score }).catch(()=>{});
-    } catch(e){}
+    } catch(e: any){}
 
     res.json({ provider: dis.provider, response: dis.output, evaluation: evalRes });
   } catch (e:any) {

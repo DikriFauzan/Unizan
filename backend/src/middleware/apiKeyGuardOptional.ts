@@ -17,7 +17,7 @@ export async function apiKeyGuardOptional(req: Request, _res: Response, next: Ne
     // TODO: real lookup (prisma / redis)
     (req as any).user = { id: "user:"+key.slice(0,8), role: "user", key };
     return next();
-  } catch (e) {
+  } catch (e: any) {
     console.warn("apiKeyGuardOptional error", e);
     return next();
   }

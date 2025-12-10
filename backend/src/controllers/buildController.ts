@@ -13,7 +13,7 @@ export const requestBuild = async (req: Request, res: Response) => {
 export const getBuildStatus = async (req: Request, res: Response) => {
   try {
     const job = await getJob(req.params.id);
-    res.json(job);
+    res.json(job: any);
   } catch (e:any) { res.status(500).json({ error: e.message }); }
 };
 

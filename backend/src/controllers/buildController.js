@@ -35,7 +35,7 @@ exports.triggerBuild = async (req, res) => {
     await buildQueue.add('build', jobData, { jobId });
 
     return res.json({ jobId, status: 'queued' });
-  } catch (e) {
+  } catch (e: any) {
     console.error('triggerBuild error', e);
     return res.status(500).json({ error: e.message });
   }

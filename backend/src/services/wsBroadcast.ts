@@ -4,7 +4,7 @@ import axios from "axios";
 export async function broadcastBuildEvent(jobId: string, payload: any) {
   try {
     await axios.post(process.env.INTERNAL_WS_URL || "http://localhost:8082/notify", { jobId, payload });
-  } catch (e) {
+  } catch (e: any) {
     console.warn("broadcast failed", e.message);
   }
 }

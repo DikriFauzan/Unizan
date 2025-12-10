@@ -8,7 +8,7 @@ export async function getEmbedding(text: string) {
       const r = await axios.post(ARIES_EMB, { text }, { timeout: 30000 });
       return r.data.embedding; // assume array of floats
     }
-  } catch (e) {
+  } catch (e: any) {
     console.warn("Aries embed failed:", e.message);
   }
 
@@ -16,7 +16,7 @@ export async function getEmbedding(text: string) {
   try {
     const r = await axios.post((process.env.OPENAI_PROXY_URL || "http://localhost:8000/internal/openai/embed"), { text }, { timeout: 30000 });
     return r.data.embedding;
-  } catch (e) {
+  } catch (e: any) {
     throw new Error("Embedding failed: " + e.message);
   }
 }

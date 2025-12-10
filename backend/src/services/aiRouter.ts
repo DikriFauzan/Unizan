@@ -34,7 +34,7 @@ export async function routeAI(prompt: string, userKey: string, model: string = "
     if (!allowFree) keyStatus.consumeTokens(res.data.token_usage || 1000);
     return res.data;
 
-  } catch (err) {
+  } catch (err: any) {
     logAriesFallback(prompt, err);
     console.log("[GEN21] Aries failed, trying Gemini → Flowith booster cascade...");
   }
@@ -45,7 +45,7 @@ export async function routeAI(prompt: string, userKey: string, model: string = "
       contents: [{ parts: [{ text: prompt }] }]
     });
     return g.data;
-  } catch (gerr) {
+  } catch (gerr: any) {
     console.log("[GEN21] Gemini failed => last fallback to Flowith...");
   }
 
@@ -56,7 +56,7 @@ export async function routeAI(prompt: string, userKey: string, model: string = "
       prompt: prompt
     }, { headers: { "Authorization": "Bearer " + process.env.FLOWITH_KEY }});
     return f.data;
-  } catch (ferr) {
+  } catch (ferr: any) {
     return { error: "All providers failed: Aries → Gemini → Flowith." };
   }
 }
