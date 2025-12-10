@@ -1,3 +1,4 @@
+import { routeAI } from './services/aiRouter';
 import express from "express";
 import cors from "cors";
 
@@ -40,3 +41,4 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`FEAC backend running on port ${PORT}`);
 });
+/* aiRouter available at services/aiRouter.ts */

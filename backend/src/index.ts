@@ -1,3 +1,4 @@
+import { routeAI } from './services/aiRouter';
 import workerBridge from './routes/workerBridge';
 import buildRoute from './routes/buildRoute';
 import { metricsMiddleware } from './middleware/metricsMiddleware';
@@ -33,3 +34,4 @@ app.use(/v1, keystoreRoute);
 app.listen(PORT, () => {
   console.log("[FEAC] Backend running on port", PORT);
 });
+/* aiRouter available at services/aiRouter.ts */

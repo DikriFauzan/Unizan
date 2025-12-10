@@ -1,52 +1,62 @@
-import { callSuperKey, superkeyHealth } from './superkeyService';
-import { callSuperkey } from './superkeyService';
-import axios from "axios";
-import { TokenEngine } from "../billing/tokenEngine";
+import axios from 'axios';
+import { validateUserKey } from './tokenEngine';    // token engine existing
+import { logAriesFallback } from './logger';        // we add this in GEN21
+import dotenv from 'dotenv';
+dotenv.config();
 
-const GEMINI_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
+const ARIES_URL = process.env.ARIES_URL || "http://127.0.0.1:8200/v1/query";
+const GEMINI_URL = process.env.GEMINI_URL || "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateText";
+const FLOWITH_URL = process.env.FLOWITH_URL || "https://api.flowith.ai/v1/complete";
 
-export async function routeAI(prompt: string, mode: string, user: any) {
-  // === SUPERKEY PRIMARY ATTEMPT (injected by gen17) ===
+// Notes:
+// Aries = primary
+// Gemini & Flowith = secondary fallback boosters
+
+export async function routeAI(prompt: string, userKey: string, model: string = "aries") {
+
+  // 1. Owner + God-Mode Bypass
+  const keyStatus = validateUserKey(userKey);
+  const allowFree = keyStatus.isOwner || keyStatus.isInternal;
+
+  // 2. Force Aries as primary provider
   try {
-    const sk = await callSuperKey((user && user.key) || process.env.FEAC_INTERNAL_KEY, prompt, mode);
-    if (sk && sk.output) { return { provider: "superkey", output: sk.output }; }
-  } catch(e) { console.warn("SuperKey primary attempt failed", e.message); }
-  console.log("[AI] Mode:", mode, "User:", user.id);
-
-  // 1. BILLING
-  await TokenEngine.bill(user, mode.toUpperCase() as any);
-
-  // 2. Primary: Gemini
-  try {
-    if (process.env.GOOGLE_API_KEY) {
-      return {
-        provider: "gemini",
-        output: "Gemini simulated response"
-      };
-    }
-    throw new Error("NO_GEMINI_KEY");
-  } catch (e) {
-    console.log("Gemini failed, failover...");
-  }
-
-  // 3. Failover: Emergent
-  try {
-    const res = await axios.post(process.env.EMERGENT_URL!, {
+    const res = await axios.post(ARIES_URL, {
       prompt,
-      depth: user.bypass ? 10 : 3
+      model: model || "aries-ultra",
+      max_tokens: 4096
+    }, {
+      headers: {
+        "Authorization": `Bearer ${process.env.FEAC_INTERNAL_KEY}`,
+        "Content-Type": "application/json"
+      }
     });
-    return {
-      provider: "emergent",
-      output: res.data.output
-    };
-  } catch (e) {
-    console.log("Emergent offline...");
+
+    if (!allowFree) keyStatus.consumeTokens(res.data.token_usage || 1000);
+    return res.data;
+
+  } catch (err) {
+    logAriesFallback(prompt, err);
+    console.log("[GEN21] Aries failed, trying Gemini → Flowith booster cascade...");
   }
 
-  // 4. Final failover: Flowith
-  return {
-    provider: "flowith",
-    output: "Fallback Flowith Response"
-  };
+  // 3. Gemini fallback
+  try {
+    const g = await axios.post(GEMINI_URL + "?key=" + process.env.GEMINI_KEY, {
+      contents: [{ parts: [{ text: prompt }] }]
+    });
+    return g.data;
+  } catch (gerr) {
+    console.log("[GEN21] Gemini failed => last fallback to Flowith...");
+  }
+
+  // 4. Flowith fallback
+  try {
+    const f = await axios.post(FLOWITH_URL, {
+      model: "flowith-pro",
+      prompt: prompt
+    }, { headers: { "Authorization": "Bearer " + process.env.FLOWITH_KEY }});
+    return f.data;
+  } catch (ferr) {
+    return { error: "All providers failed: Aries → Gemini → Flowith." };
+  }
 }

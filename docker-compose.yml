@@ -123,3 +123,21 @@ services:
       - feac-api
       - superkey
       - emergent
+
+  superkey:
+    build: ./superkey
+    ports:
+      - "8200:8200"
+    environment:
+      - FEAC_INTERNAL_KEY=${FEAC_INTERNAL_KEY}
+      - SUPERKEY_PORT=8200
+    restart: unless-stopped
+
+  superkey:
+    build: ./superkey
+    ports:
+      - "8200:8200"
+    environment:
+      - FEAC_INTERNAL_KEY=${FEAC_INTERNAL_KEY}
+      - SUPERKEY_PORT=8200
+    restart: unless-stopped

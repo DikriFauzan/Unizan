@@ -1,18 +1,16 @@
-import React, { useEffect } from "react";
+import React from 'react';
 
-export default function ChatLayout({ children, onBack }) {
-  useEffect(() => {
-    document.body.classList.add('feac-chat-focused');
-    return () => document.body.classList.remove('feac-chat-focused');
-  }, []);
+export default function ChatLayout({ children }) {
+  const [provider, setProvider] = React.useState("Aries Superkey");
 
   return (
     <div className="chat-layout">
-      <div className="chat-header">
-        <button onClick={onBack} style={{marginRight:12}}>Back</button>
-        <h3>Chat Room</h3>
+      <div className="top-bar">
+        <span>Provider: <b>{provider}</b></span>
       </div>
-      <div className="chat-main">{children}</div>
+      <div className="chat-container">
+        {children}
+      </div>
     </div>
   );
 }

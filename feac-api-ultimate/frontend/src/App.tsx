@@ -1,3 +1,4 @@
+import SuperKeyAdmin from './admin/SuperKeyAdmin';
 import AdminBilling from './admin/AdminBilling';
 import { AuthProvider } from './context/AuthContext';
 import React from "react";
@@ -7,7 +8,8 @@ export default function App() {
     return (
         <Router>
             <Routes>
-            <Route path="/login" element={<Login/>} /><Route path="/register" element={<Register/>} /><Route path="/admin/billing" element={<AdminBilling/>} /></Routes>
+            <Route path="/login" element={<Login/>} /><Route path="/register" element={<Register/>} /><Route path="/admin/billing" element={<AdminBilling/>} />  <Route path="/admin/superkey" element={<SuperKeyAdmin/>} />
+</Routes>
         </Router>
     );
 }
