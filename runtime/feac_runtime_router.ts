@@ -11,7 +11,9 @@ import { controlRoute } from "./feac_control_router";
 import { agentRoute } from "./feac_agent_router";
 import { financialRoute } from "./feac_financial_router";
 import { storeRoute } from "./feac_store_router";
-import { subscriptionRoute } from "./feac_subscription_router"; // Unified Router
+import { subscriptionRoute } from "./feac_subscription_router";
+import { retentionRoute } from "./feac_retention_router";
+import { notifyRoute } from "./feac_notify_router"; // Step 21
 
 const binding = new FEACRuntimeBinding();
 
@@ -36,45 +38,57 @@ async function adminMemoryLayer(cmd: string, payload: any) {
 }
 
 export async function feacRoute(cmd: string, payload: any): Promise<any> {
-  // 1. Subscription & Offer Layer
+  // 1. Notify Layer (Step 21)
+  if (cmd.startsWith("notify.") || cmd.startsWith("event.")) {
+    const notRes = await notifyRoute(cmd, payload);
+    if (notRes) return notRes;
+  }
+
+  // 2. Retention Layer (Step 20)
+  if (cmd.startsWith("user.benefit") || cmd.startsWith("sub.resubscribe")) {
+    const retRes = await retentionRoute(cmd, payload);
+    if (retRes) return retRes;
+  }
+
+  // 3. Subscription & Offer Layer
   if (cmd.startsWith("sub.") || cmd.startsWith("offer.") || cmd.startsWith("user.")) {
     const subRes = await subscriptionRoute(cmd, payload);
     if (subRes) return subRes;
   }
 
-  // 2. Store Layer
+  // 4. Store Layer
   if (cmd.startsWith("store.")) {
     const storeRes = await storeRoute(cmd, payload);
     if (storeRes) return storeRes;
   }
 
-  // 3. Financial Layer
+  // 5. Financial Layer
   if (cmd.startsWith("finance.")) {
     const finRes = await financialRoute(cmd, payload);
     if (finRes) return finRes;
   }
 
-  // 4. Agent Swarm Layer
+  // 6. Agent Swarm Layer
   if (cmd.startsWith("agent.")) {
     const agentRes = await agentRoute(cmd, payload);
     if (agentRes) return agentRes;
   }
 
-  // 5. Control Layer
+  // 7. Control Layer
   const ctrl = await controlRoute(cmd, payload);
   if (ctrl) return ctrl;
 
-  // 6. Snapshot Layer
+  // 8. Snapshot Layer
   if (cmd.startsWith("snapshot.") || cmd.startsWith("admin.snapshot.")) {
     const snapRes = await snapshotRoute(cmd, payload);
     if (snapRes) return snapRes;
   }
 
-  // 7. Admin & Memory Layers
+  // 9. Admin & Memory Layers
   if (await adminLayer(cmd, payload)) return await adminLayer(cmd, payload);
   if (await adminMemoryLayer(cmd, payload)) return await adminMemoryLayer(cmd, payload);
 
-  // 8. Standard Commands
+  // 10. Standard Commands
   switch (cmd) {
     case "superkey.exec":
     case "superkey.validate":

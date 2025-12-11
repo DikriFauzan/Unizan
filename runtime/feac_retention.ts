@@ -31,3 +31,21 @@ export function triggerWinBack(userId: string, planTier: string) {
   learn("winback_success", { userId, plan: planTier }, ["revenue", "retention"]);
   return { status: "benefits_stacked", currentMultiplier: totalMult };
 }
+
+// --- AUTO INJECTED EVENT BROADCAST ---
+import { broadcastEvent } from "./feac_event_listener";
+
+// Monkey Patch fungsi asli untuk menambah notifikasi
+const originalTrigger = triggerChurnPrevention;
+export function triggerChurnPreventionWithNotify(userId: string, subId: string) {
+  const res = originalTrigger(userId, subId);
+  broadcastEvent("churn_start", { userId, subId });
+  return res;
+}
+
+const originalWinBack = triggerWinBack;
+export function triggerWinBackWithNotify(userId: string, planTier: string) {
+  const res = originalWinBack(userId, planTier);
+  broadcastEvent("winback_success", { userId, plan: planTier });
+  return res;
+}
