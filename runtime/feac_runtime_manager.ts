@@ -66,3 +66,19 @@ export async function rotationTick() {
     return { status: "error", error: e.message };
   }
 }
+
+// STEP11: AUTO REGISTER MEMORY SNAPSHOT ON STARTUP
+import { registerMemory } from "./feac_memory_guard";
+
+export function autoloadMemoryGuard() {
+  const critical = [
+    __filename,
+    "./feac_runtime_router.ts",
+    "./feac_dispatcher.ts",
+    "./feac_token_policy.ts",
+    "./feac_key_manager.ts"
+  ];
+  for (const c of critical) {
+    try { registerMemory(c); } catch {}
+  }
+}
