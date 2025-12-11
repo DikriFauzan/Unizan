@@ -1,24 +1,17 @@
-// The file that wakes up the entire AI consciousness
-
 console.log("==========================================");
 console.log("=      FEAC SOVEREIGN OS - BOOTING       =");
 console.log("==========================================");
 
-// 1. Initialize The Neural Bus
 import "./feac_bus";
 
-// 2. Wake up the Assembly Line (Workers)
+// Wake up the Assembly Line
 import "./workers/commerce.worker";
 import "./workers/retention.worker";
-// Nanti kita bisa tambah:
-// import "./workers/security.worker";
-// import "./workers/analytic.worker";
+import "./workers/financial.worker"; // FIX: Added Financial Worker
 
-// 3. Start The Heartbeat (Sentinel)
 import { startSentinel } from "./feac_sentinel";
 startSentinel();
 
-// 4. Open The Gateway to the World
 import * as http from "http";
 import { handleRequest } from "./feac_gateway";
 

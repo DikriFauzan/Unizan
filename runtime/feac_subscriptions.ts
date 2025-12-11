@@ -12,18 +12,19 @@ export interface Subscription {
   nextBillingDate: number;
 }
 
-function loadDB(): Subscription[] {
+// EXPORTED NOW
+export function loadDB(): Subscription[] {
   if (!fs.existsSync(SUB_PATH)) return [];
   try { return JSON.parse(fs.readFileSync(SUB_PATH, "utf8")); } catch { return []; }
 }
 
-function saveDB(data: Subscription[]) {
+export function saveDB(data: Subscription[]) {
   fs.writeFileSync(SUB_PATH, JSON.stringify(data, null, 2));
 }
 
 export function createSubscription(userId: string, productId: string, interval: "monthly" | "yearly") {
   const db = loadDB();
-  const intervalMs = interval === "monthly" ? 30000 : 360000; // Simulasi cepat
+  const intervalMs = interval === "monthly" ? 30000 : 360000; 
 
   const sub: Subscription = {
     id: "sub-" + Date.now().toString(36),
