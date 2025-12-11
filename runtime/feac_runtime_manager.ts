@@ -34,3 +34,22 @@ import { feacRouteWithPolicy } from "./feac_runtime_router";
 export async function securedTask(command: string, payload: any) {
   return await feacRouteWithPolicy(command, payload);
 }
+
+// AUTO-ROTATION-INJECT (STEP 9)
+import { ensureRotationIfNeeded, getOwnerKeyMasked } from "./feac_key_manager";
+
+/**
+ * Call this periodically from manager start-up or via scheduler to
+ * automatically rotate owner/service keys when due.
+ */
+export async function rotationTick() {
+  try {
+    const res = ensureRotationIfNeeded("scheduled-tick");
+    if (res?.status === "rotated") {
+      console.log("[rotation] key rotated:", res.id);
+    }
+  } catch (e) {
+    console.warn("[rotation] failed:", e);
+  }
+}
+// Optionally expose getOwnerKeyMasked for admin endpoints.
