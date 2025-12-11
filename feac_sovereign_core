@@ -1,0 +1,28 @@
+feac_sovereign_core/
+│
+├── compiler/
+│   ├── sovereign_lexer.py
+│   ├── sovereign_parser.py
+│   ├── sovereign_ir.py
+│   ├── sovereign_optimizer.py
+│   ├── sovereign_codegen.py
+│   ├── sovereign_validator.py
+│   └── sovereign_runtime.py
+│
+├── authority/
+│   ├── levels.yaml
+│   ├── tokens.py
+│   ├── permissions.py
+│   └── audit_log.py
+│
+├── uci/
+│   ├── schema.json
+│   ├── validator.py
+│   └── dispatcher.py
+│
+├── integration/
+│   ├── superkey_bridge.ts
+│   ├── neoengine_bridge.gd
+│   └── mobile_adapter.py
+│
+└── tests/
