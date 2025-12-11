@@ -1,27 +1,30 @@
 {
-  "name": "feac_sovereign_compiler",
+  "name": "feac-sovereign-compiler",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "test": "tests"
-  },
+  "description": "Sovereign AI Compiler",
+  "main": "dist/runtime/feac_runtime_main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc -p tsconfig.integration.json",
+    "start": "node dist/server_bridge/local_brain.js",
+    "dev": "npm run build && npm run start"
   },
-  "repository": {
-    "type": "git",
+  "keywords": [
+    "ai",
+    "sovereign",
+    "compiler"
+  ],
+  "author": "DikriFauzan",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/DikriFauzan/Unizan/issues"
-  },
-  "homepage": "https://github.com/DikriFauzan/Unizan#readme",
   "devDependencies": {
-    "@types/node": "^25.0.0",
-    "typescript": "^5.9.3"
+    "@types/body-parser": "^1.19.5",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.7",
+    "typescript": "^5.4.5"
   }
 }
