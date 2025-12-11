@@ -4,6 +4,7 @@ import { writeAudit } from "./feac_audit";
 import { ensureRotationIfNeeded } from "./feac_key_manager";
 import { revokeKey, listRevoked } from "./feac_key_revoke";
 import { listRotationLog } from "./feac_rotation_audit";
+// Step 11 Imports
 import { registerMemory, verifyMemory, listGuard } from "./feac_memory_guard";
 import { scanAllMemory } from "./feac_memory_scanner";
 
@@ -18,12 +19,8 @@ async function adminLayer(cmd: string, payload: any) {
       return { status: "ok", result: ensureRotationIfNeeded("admin-forced") };
 
     case "admin.revoke-key":
-      if (!payload?.keyId)
-        return { status: "error", error: "missing keyId" };
-      return {
-        status: "ok",
-        result: revokeKey(payload.keyId, { reason: payload.reason })
-      };
+      if (!payload?.keyId) return { status: "error", error: "missing keyId" };
+      return { status: "ok", result: revokeKey(payload.keyId, { reason: payload.reason }) };
 
     case "admin.rotation-log":
       return { status: "ok", log: listRotationLog(50) };
@@ -48,10 +45,12 @@ async function adminMemoryLayer(cmd: string, payload: any) {
       return { status: "ok", list: listGuard() };
 
     case "admin.memory.register":
-      if (!payload?.file)
-        return { status: "error", error: "missing file" };
-      const r = registerMemory(payload.file);
-      return { status: "ok", record: r };
+      if (!payload?.file) return { status: "error", error: "missing file" };
+      return { status: "ok", record: registerMemory(payload.file) };
+
+    case "admin.memory.verify":
+       if (!payload?.file) return { status: "error", error: "missing file" };
+       return { status: "ok", check: verifyMemory(payload.file) };
 
     default:
       return null;
@@ -59,12 +58,18 @@ async function adminMemoryLayer(cmd: string, payload: any) {
 }
 
 // =============================
-// BASE ROUTER (Step 6)
+// BASE ROUTER (SECURE HUB)
 // =============================
 export async function feacRoute(cmd: string, payload: any) {
+  // 1. Cek Admin General (Step 10)
   const adminRes = await adminLayer(cmd, payload);
   if (adminRes) return adminRes;
+  
+  // 2. Cek Admin Memory (Step 11) - SECURED HERE
+  const memoryRes = await adminMemoryLayer(cmd, payload);
+  if (memoryRes) return memoryRes;
 
+  // 3. Standard Commands
   switch (cmd) {
     case "superkey.exec":
     case "superkey.validate":
@@ -86,14 +91,10 @@ export async function feacRoute(cmd: string, payload: any) {
 }
 
 // =============================
-// POLICY WRAPPER (Step 8 + Step 11)
+// POLICY WRAPPER (Step 8)
 // =============================
 export async function feacRouteWithPolicy(cmd: string, payload: any) {
-  // Step 11: Check memory admin layer first
-  const mem = await adminMemoryLayer(cmd, payload);
-  if (mem) return mem;
-
-  // Step 8: Token Policy
+  // 1. CEK TOKEN TERLEBIH DAHULU (Critical Security)
   const token = payload?.token || "";
   const policy = evaluateToken(token, cmd);
 
@@ -107,6 +108,6 @@ export async function feacRouteWithPolicy(cmd: string, payload: any) {
     };
   }
 
-  // Pass to router
+  // 2. Jika lolos Token, baru masuk ke Router (yang berisi Memory Layer)
   return await feacRoute(cmd, payload);
 }

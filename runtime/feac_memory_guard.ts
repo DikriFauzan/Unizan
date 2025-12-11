@@ -1,64 +1,43 @@
 import * as fs from "fs";
 import * as crypto from "crypto";
-import * as path from "path";
 
-const MEM_PATH = path.join(process.env.HOME || ".", "feac_memory_guard.json");
+const REGISTRY_FILE = "feac_memory_registry.json";
 
-export interface IntegrityRecord {
-  file: string;
-  hash: string;
-  updated: number;
-}
-
-function sha256(data: string | Buffer) {
-  return crypto.createHash("sha256").update(data).digest("hex");
-}
-
-function loadGuard(): IntegrityRecord[] {
-  if (!fs.existsSync(MEM_PATH)) return [];
-  try {
-    return JSON.parse(fs.readFileSync(MEM_PATH, "utf8"));
-  } catch {
-    return [];
-  }
-}
-
-function saveGuard(list: IntegrityRecord[]) {
-  fs.writeFileSync(MEM_PATH, JSON.stringify(list, null, 2));
+function getHash(filePath: string): string {
+  if (!fs.existsSync(filePath)) return "missing";
+  const content = fs.readFileSync(filePath);
+  return crypto.createHash("sha256").update(content).digest("hex");
 }
 
 export function registerMemory(filePath: string) {
-  if (!fs.existsSync(filePath)) return;
-  const data = fs.readFileSync(filePath);
-  const h = sha256(data);
-
-  const list = loadGuard();
-  const idx = list.findIndex(e => e.file === filePath);
-
-  const entry: IntegrityRecord = {
-    file: filePath,
-    hash: h,
-    updated: Date.now()
-  };
-
-  if (idx >= 0) list[idx] = entry;
-  else list.push(entry);
-
-  saveGuard(list);
-
-  return entry;
+  let reg: Record<string, string> = {};
+  if (fs.existsSync(REGISTRY_FILE)) {
+    reg = JSON.parse(fs.readFileSync(REGISTRY_FILE, "utf8"));
+  }
+  const h = getHash(filePath);
+  reg[filePath] = h;
+  fs.writeFileSync(REGISTRY_FILE, JSON.stringify(reg, null, 2));
+  return { file: filePath, hash: h, status: "registered" };
 }
 
 export function verifyMemory(filePath: string) {
-  if (!fs.existsSync(filePath)) return { ok: false, cause: "file-missing" };
-  const list = loadGuard();
-  const e = list.find(x => x.file === filePath);
-  if (!e) return { ok: false, cause: "not-registered" };
-
-  const h = sha256(fs.readFileSync(filePath));
-  return { ok: h === e.hash, expected: e.hash, actual: h };
+  if (!fs.existsSync(REGISTRY_FILE)) return { status: "unknown", reason: "no-registry" };
+  const reg = JSON.parse(fs.readFileSync(REGISTRY_FILE, "utf8"));
+  
+  if (!reg[filePath]) return { status: "unknown", reason: "not-registered" };
+  
+  const current = getHash(filePath);
+  const expected = reg[filePath];
+  
+  return {
+    file: filePath,
+    status: current === expected ? "secure" : "compromised",
+    expected,
+    current
+  };
 }
 
 export function listGuard() {
-  return loadGuard();
+  if (!fs.existsSync(REGISTRY_FILE)) return {};
+  return JSON.parse(fs.readFileSync(REGISTRY_FILE, "utf8"));
 }

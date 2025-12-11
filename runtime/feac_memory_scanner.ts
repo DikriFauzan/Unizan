@@ -1,26 +1,22 @@
-import { verifyMemory, listGuard } from "./feac_memory_guard";
-import { revokeKey } from "./feac_key_revoke";
-import { writeRotationLog } from "./feac_rotation_audit";
+import * as fs from "fs";
+import * as path from "path";
 
-export function scanAllMemory(): any[] {
-  const list = listGuard();
-  const result: any[] = [];
-
-  for (const rec of list) {
-    const s = verifyMemory(rec.file);
-    result.push({ file: rec.file, ...s });
-
-    if (!s.ok) {
-      revokeKey("owner", { reason: "memory-corruption-detected" });
-
-      writeRotationLog({
-        id: "memory-corruption-" + Date.now(),
-        timestamp: Date.now(),
-        oldKeyMasked: "???",
-        newKeyMasked: "revoked",
-        reason: "memory-corruption"
-      });
-    }
-  }
-  return result;
+export function scanAllMemory() {
+  const root = process.cwd();
+  const runtime = path.join(root, "runtime");
+  
+  if (!fs.existsSync(runtime)) return { error: "runtime-missing" };
+  
+  const files = fs.readdirSync(runtime);
+  const result = files.map(f => {
+    const full = path.join(runtime, f);
+    const stat = fs.statSync(full);
+    return {
+      name: f,
+      size: stat.size,
+      type: stat.isDirectory() ? "dir" : "file"
+    };
+  });
+  
+  return { location: runtime, files: result };
 }
