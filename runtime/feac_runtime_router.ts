@@ -10,7 +10,8 @@ import { snapshotRoute } from "./feac_snapshot_router";
 import { controlRoute } from "./feac_control_router"; 
 import { agentRoute } from "./feac_agent_router";
 import { financialRoute } from "./feac_financial_router";
-import { storeRoute } from "./feac_store_router"; // Step 18
+import { storeRoute } from "./feac_store_router";
+import { subscriptionRoute } from "./feac_subscription_router"; // Unified Router
 
 const binding = new FEACRuntimeBinding();
 
@@ -35,39 +36,45 @@ async function adminMemoryLayer(cmd: string, payload: any) {
 }
 
 export async function feacRoute(cmd: string, payload: any): Promise<any> {
-  // 1. Store Layer (Step 18)
+  // 1. Subscription & Offer Layer
+  if (cmd.startsWith("sub.") || cmd.startsWith("offer.") || cmd.startsWith("user.")) {
+    const subRes = await subscriptionRoute(cmd, payload);
+    if (subRes) return subRes;
+  }
+
+  // 2. Store Layer
   if (cmd.startsWith("store.")) {
     const storeRes = await storeRoute(cmd, payload);
     if (storeRes) return storeRes;
   }
 
-  // 2. Financial Layer
+  // 3. Financial Layer
   if (cmd.startsWith("finance.")) {
     const finRes = await financialRoute(cmd, payload);
     if (finRes) return finRes;
   }
 
-  // 3. Agent Swarm Layer
+  // 4. Agent Swarm Layer
   if (cmd.startsWith("agent.")) {
     const agentRes = await agentRoute(cmd, payload);
     if (agentRes) return agentRes;
   }
 
-  // 4. Control Layer
+  // 5. Control Layer
   const ctrl = await controlRoute(cmd, payload);
   if (ctrl) return ctrl;
 
-  // 5. Snapshot Layer
+  // 6. Snapshot Layer
   if (cmd.startsWith("snapshot.") || cmd.startsWith("admin.snapshot.")) {
     const snapRes = await snapshotRoute(cmd, payload);
     if (snapRes) return snapRes;
   }
 
-  // 6. Admin & Memory Layers
+  // 7. Admin & Memory Layers
   if (await adminLayer(cmd, payload)) return await adminLayer(cmd, payload);
   if (await adminMemoryLayer(cmd, payload)) return await adminMemoryLayer(cmd, payload);
 
-  // 7. Standard Commands
+  // 8. Standard Commands
   switch (cmd) {
     case "superkey.exec":
     case "superkey.validate":
