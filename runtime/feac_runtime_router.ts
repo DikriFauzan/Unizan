@@ -30,3 +30,27 @@ export async function feacRoute(command: string, payload: any) {
       };
   }
 }
+
+// ================== AUTO-POLICY INJECT (STEP 8) ==================
+import { evaluateToken } from "./feac_token_policy";
+import { writeAudit } from "./feac_audit";
+
+export async function feacRouteWithPolicy(cmd: string, payload: any) {
+  const token = payload?.token || "";
+  const policy = evaluateToken(token, cmd);
+
+  writeAudit(cmd, token, policy.level, policy.allowed, policy.reason);
+
+  if (!policy.allowed) {
+    return {
+      status: "denied",
+      reason: policy.reason || "policy-blocked",
+      level: policy.level
+    };
+  }
+
+  // forward to normal router
+  // feacRoute already exists above in original file
+  // @ts-ignore
+  return await feacRoute(cmd, payload);
+}

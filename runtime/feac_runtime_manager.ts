@@ -28,3 +28,9 @@ export async function runtimeShutdown() {
   const res = await shutdownAll();
   return res;
 }
+
+// AUTO-POLICY BIND (STEP 8)
+import { feacRouteWithPolicy } from "./feac_runtime_router";
+export async function securedTask(command: string, payload: any) {
+  return await feacRouteWithPolicy(command, payload);
+}
