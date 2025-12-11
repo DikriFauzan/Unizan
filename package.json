@@ -1,0 +1,27 @@
+{
+  "name": "feac_sovereign_compiler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/DikriFauzan/Unizan/issues"
+  },
+  "homepage": "https://github.com/DikriFauzan/Unizan#readme",
+  "devDependencies": {
+    "@types/node": "^25.0.0",
+    "typescript": "^5.9.3"
+  }
+}
