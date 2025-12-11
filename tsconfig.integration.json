@@ -1,16 +1,24 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "module": "commonjs",
-    "strict": false,
+    "rootDir": "./",
+    "outDir": "./dist",
+    "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "outDir": "./dist",
-    "rootDir": ".",
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "integration/**/*.ts",
-    "runtime/**/*.ts"
+    "integration/**/*",
+    "registry/**/*",
+    "runtime/**/*",
+    "server_bridge/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts",
+    "runtime/snapshots", 
+    "runtime/sandbox"
   ]
 }
