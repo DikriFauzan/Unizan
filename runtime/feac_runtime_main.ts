@@ -19,3 +19,9 @@ export async function feacRuntimeDispatch(cmd: string, payload: any) {
 
   return { status: "error", error: "Unknown FEAC runtime command" };
 }
+
+// === AUTO-INJECT ROUTER BINDING (STEP 6) ===
+import { feacRoute } from "./feac_runtime_router";
+export async function feac(entry: string, payload: any = {}) {
+  return await feacRoute(entry, payload);
+}
