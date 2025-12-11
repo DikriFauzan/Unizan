@@ -9,7 +9,8 @@ import { scanAllMemory } from "./feac_memory_scanner";
 import { snapshotRoute } from "./feac_snapshot_router";
 import { controlRoute } from "./feac_control_router"; 
 import { agentRoute } from "./feac_agent_router";
-import { financialRoute } from "./feac_financial_router"; // NEW
+import { financialRoute } from "./feac_financial_router";
+import { storeRoute } from "./feac_store_router"; // Step 18
 
 const binding = new FEACRuntimeBinding();
 
@@ -34,33 +35,39 @@ async function adminMemoryLayer(cmd: string, payload: any) {
 }
 
 export async function feacRoute(cmd: string, payload: any): Promise<any> {
-  // 1. Financial Layer (Step 17)
+  // 1. Store Layer (Step 18)
+  if (cmd.startsWith("store.")) {
+    const storeRes = await storeRoute(cmd, payload);
+    if (storeRes) return storeRes;
+  }
+
+  // 2. Financial Layer
   if (cmd.startsWith("finance.")) {
     const finRes = await financialRoute(cmd, payload);
     if (finRes) return finRes;
   }
 
-  // 2. Agent Swarm Layer
+  // 3. Agent Swarm Layer
   if (cmd.startsWith("agent.")) {
     const agentRes = await agentRoute(cmd, payload);
     if (agentRes) return agentRes;
   }
 
-  // 3. Control Layer
+  // 4. Control Layer
   const ctrl = await controlRoute(cmd, payload);
   if (ctrl) return ctrl;
 
-  // 4. Snapshot Layer
+  // 5. Snapshot Layer
   if (cmd.startsWith("snapshot.") || cmd.startsWith("admin.snapshot.")) {
     const snapRes = await snapshotRoute(cmd, payload);
     if (snapRes) return snapRes;
   }
 
-  // 5. Admin & Memory Layers
+  // 6. Admin & Memory Layers
   if (await adminLayer(cmd, payload)) return await adminLayer(cmd, payload);
   if (await adminMemoryLayer(cmd, payload)) return await adminMemoryLayer(cmd, payload);
 
-  // 6. Standard Commands
+  // 7. Standard Commands
   switch (cmd) {
     case "superkey.exec":
     case "superkey.validate":
