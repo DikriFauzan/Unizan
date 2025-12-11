@@ -25,3 +25,6 @@ import { feacRoute } from "./feac_runtime_router";
 export async function feac(entry: string, payload: any = {}) {
   return await feacRoute(entry, payload);
 }
+// AUTO-INJECT: runtime manager API (STEP 7)
+import { startTask, runtimeStatus, runtimeShutdown } from "./feac_runtime_manager";
+export { startTask, runtimeStatus, runtimeShutdown };
