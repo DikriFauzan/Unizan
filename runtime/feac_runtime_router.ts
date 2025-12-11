@@ -6,15 +6,13 @@ import { revokeKey, listRevoked } from "./feac_key_revoke";
 import { listRotationLog } from "./feac_rotation_audit";
 import { registerMemory, verifyMemory, listGuard } from "./feac_memory_guard";
 import { scanAllMemory } from "./feac_memory_scanner";
-import { createSnapshot, listSnapshots } from "./feac_snapshot";
-import { loadSnapshot } from "./feac_snapshot_loader";
 import { snapshotRoute } from "./feac_snapshot_router";
 import { controlRoute } from "./feac_control_router"; 
-import { agentRoute } from "./feac_agent_router"; // Step 15
+import { agentRoute } from "./feac_agent_router";
+import { financialRoute } from "./feac_financial_router"; // NEW
 
 const binding = new FEACRuntimeBinding();
 
-// --- ADMIN LAYERS ---
 async function adminLayer(cmd: string, payload: any) {
   switch (cmd) {
     case "admin.rotate-now": return { status: "ok", result: ensureRotationIfNeeded("admin-forced") };
@@ -35,29 +33,34 @@ async function adminMemoryLayer(cmd: string, payload: any) {
   }
 }
 
-// --- MAIN ROUTER ---
-export async function feacRoute(cmd: string, payload: any) {
-  // 1. Agent Swarm Layer (Step 15)
+export async function feacRoute(cmd: string, payload: any): Promise<any> {
+  // 1. Financial Layer (Step 17)
+  if (cmd.startsWith("finance.")) {
+    const finRes = await financialRoute(cmd, payload);
+    if (finRes) return finRes;
+  }
+
+  // 2. Agent Swarm Layer
   if (cmd.startsWith("agent.")) {
     const agentRes = await agentRoute(cmd, payload);
     if (agentRes) return agentRes;
   }
 
-  // 2. Control Layer (Step 14)
+  // 3. Control Layer
   const ctrl = await controlRoute(cmd, payload);
   if (ctrl) return ctrl;
 
-  // 3. Snapshot Layer (Step 13)
+  // 4. Snapshot Layer
   if (cmd.startsWith("snapshot.") || cmd.startsWith("admin.snapshot.")) {
     const snapRes = await snapshotRoute(cmd, payload);
     if (snapRes) return snapRes;
   }
 
-  // 4. Admin & Memory Layers
+  // 5. Admin & Memory Layers
   if (await adminLayer(cmd, payload)) return await adminLayer(cmd, payload);
   if (await adminMemoryLayer(cmd, payload)) return await adminMemoryLayer(cmd, payload);
 
-  // 5. Standard Commands
+  // 6. Standard Commands
   switch (cmd) {
     case "superkey.exec":
     case "superkey.validate":
@@ -68,8 +71,7 @@ export async function feacRoute(cmd: string, payload: any) {
   }
 }
 
-// --- POLICY ENGINE ---
-export async function feacRouteWithPolicy(cmd: string, payload: any) {
+export async function feacRouteWithPolicy(cmd: string, payload: any): Promise<any> {
   const token = payload?.token || "";
   const policy = evaluateToken(token, cmd);
   writeAudit(cmd, token, policy.level, policy.allowed, policy.reason);

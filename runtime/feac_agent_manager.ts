@@ -1,11 +1,11 @@
 import { SecurityAgent } from "./feac_agent_security";
 import { RevenueAgent } from "./feac_agent_revenue";
+import { FinancialAgent } from "./feac_agent_financial"; // NEW
 
-// Registry Agen
 const agents: any = {
   security: new SecurityAgent(),
   revenue: new RevenueAgent(),
-  // Disini nanti tempat FinancialAgent (Stripe Replacement)
+  financial: new FinancialAgent(), // Registered
 };
 
 export function startAgent(name: string) {
@@ -32,5 +32,6 @@ export function listAgents() {
   return status;
 }
 
-// Auto Start Security on Boot (Proteksi Max)
+// Auto Start Essential Agents
 agents.security.start();
+agents.financial.start(); // Finance Minister on duty!
