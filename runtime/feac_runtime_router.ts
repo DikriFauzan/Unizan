@@ -6,11 +6,15 @@ import { revokeKey, listRevoked } from "./feac_key_revoke";
 import { listRotationLog } from "./feac_rotation_audit";
 import { registerMemory, verifyMemory, listGuard } from "./feac_memory_guard";
 import { scanAllMemory } from "./feac_memory_scanner";
+import { createSnapshot, listSnapshots } from "./feac_snapshot";
+import { loadSnapshot } from "./feac_snapshot_loader";
 import { snapshotRoute } from "./feac_snapshot_router";
 import { controlRoute } from "./feac_control_router"; 
+import { agentRoute } from "./feac_agent_router"; // Step 15
 
 const binding = new FEACRuntimeBinding();
 
+// --- ADMIN LAYERS ---
 async function adminLayer(cmd: string, payload: any) {
   switch (cmd) {
     case "admin.rotate-now": return { status: "ok", result: ensureRotationIfNeeded("admin-forced") };
@@ -31,23 +35,29 @@ async function adminMemoryLayer(cmd: string, payload: any) {
   }
 }
 
-// FIX: Added ': Promise<any>' explicitly
-export async function feacRoute(cmd: string, payload: any): Promise<any> {
-  // 1. Control Layer
+// --- MAIN ROUTER ---
+export async function feacRoute(cmd: string, payload: any) {
+  // 1. Agent Swarm Layer (Step 15)
+  if (cmd.startsWith("agent.")) {
+    const agentRes = await agentRoute(cmd, payload);
+    if (agentRes) return agentRes;
+  }
+
+  // 2. Control Layer (Step 14)
   const ctrl = await controlRoute(cmd, payload);
   if (ctrl) return ctrl;
 
-  // 2. Snapshot Layer
+  // 3. Snapshot Layer (Step 13)
   if (cmd.startsWith("snapshot.") || cmd.startsWith("admin.snapshot.")) {
     const snapRes = await snapshotRoute(cmd, payload);
     if (snapRes) return snapRes;
   }
 
-  // 3. Admin & Memory Layers
+  // 4. Admin & Memory Layers
   if (await adminLayer(cmd, payload)) return await adminLayer(cmd, payload);
   if (await adminMemoryLayer(cmd, payload)) return await adminMemoryLayer(cmd, payload);
 
-  // 4. Standard Commands
+  // 5. Standard Commands
   switch (cmd) {
     case "superkey.exec":
     case "superkey.validate":
@@ -58,8 +68,8 @@ export async function feacRoute(cmd: string, payload: any): Promise<any> {
   }
 }
 
-// FIX: Added ': Promise<any>' explicitly
-export async function feacRouteWithPolicy(cmd: string, payload: any): Promise<any> {
+// --- POLICY ENGINE ---
+export async function feacRouteWithPolicy(cmd: string, payload: any) {
   const token = payload?.token || "";
   const policy = evaluateToken(token, cmd);
   writeAudit(cmd, token, policy.level, policy.allowed, policy.reason);
