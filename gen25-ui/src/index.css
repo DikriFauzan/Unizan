@@ -1,3 +1,68 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  background-color: #0b1121; /* Deep Space Blue */
+  color: #e2e8f0;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+}
+
+/* Scrollbar Futuristik */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #0f172a; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+
+/* Komponen Sovereign */
+.sov-card {
+  background: #151e32;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+.sov-input {
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: white;
+  padding: 10px;
+  border-radius: 6px;
+  width: 100%;
+  outline: none;
+  font-size: 13px;
+}
+.sov-input:focus { border-color: #10b981; }
+
+.sov-btn {
+  background: #10b981;
+  color: #022c22;
+  font-weight: bold;
+  padding: 10px 15px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+.sov-btn:active { transform: scale(0.98); }
+.sov-btn-danger { background: #ef4444; color: white; }
+.sov-btn-warn { background: #f59e0b; color: black; }
+.sov-btn-ghost { background: transparent; border: 1px solid #334155; color: #cbd5e1; }
+
+/* Animasi & Efek */
+.cursor-blink { animation: blink 1s step-end infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.animate-fade { animation: fadeIn 0.3s ease-in; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+.glass-card {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
