@@ -1,16 +1,24 @@
 {
   "name": "feac-gen25-ui",
+<<<<<<< HEAD
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
+=======
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+>>>>>>> gen25-ui-20251212-0053
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+<<<<<<< HEAD
     "lucide-react": "^0.263.1"
   },
   "devDependencies": {
@@ -19,5 +27,15 @@
     "@vitejs/plugin-react": "^4.0.3",
     "typescript": "^5.0.2",
     "vite": "^4.4.5"
+=======
+    "lucide-react": "^0.292.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vite": "^5.0.0",
+    "@types/react": "^18.2.21",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.2.0"
+>>>>>>> gen25-ui-20251212-0053
   }
 }

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 name: Sovereign Build
 on: [push, workflow_dispatch]
 jobs:
@@ -12,3 +13,53 @@ jobs:
       - run: npm install && npm install -g pkg && npx pkg server.js --targets node18-linux-x64,node18-win-x64 --output feac_sovereign
       - uses: actions/upload-artifact@v4
         with: { name: sovereign-builds, path: 'feac_sovereign*' }
+=======
+name: Sovereign Factory Build
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-and-package:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    # --- BUILD UI ---
+    - name: Install UI Dependencies
+      working-directory: ./gen25-ui
+      run: npm install
+
+    - name: Build React UI
+      working-directory: ./gen25-ui
+      run: npm run build
+
+    # --- BUILD SERVER & BINARY ---
+    - name: Install Server Dependencies
+      run: |
+        npm install
+        npm install -g pkg
+
+    - name: Compile Binary (Linux & Windows)
+      # pkg akan membungkus server.js + folder gen25-ui/dist ke dalam satu file
+      run: |
+        npx pkg server.js --targets node18-linux-x64,node18-win-x64 --output feac_sovereign
+
+    # --- UPLOAD ARTIFACTS ---
+    - name: Upload Binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: Sovereign-Release-Builds
+        path: |
+          feac_sovereign-linux
+          feac_sovereign-win.exe
+>>>>>>> gen25-ui-20251212-0053
