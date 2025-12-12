@@ -1,0 +1,14 @@
+name: Sovereign Build
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with: { node-version: '18' }
+      - run: npm install && npm run build
+        working-directory: ./gen25-ui
+      - run: npm install && npm install -g pkg && npx pkg server.js --targets node18-linux-x64,node18-win-x64 --output feac_sovereign
+      - uses: actions/upload-artifact@v4
+        with: { name: sovereign-builds, path: 'feac_sovereign*' }
